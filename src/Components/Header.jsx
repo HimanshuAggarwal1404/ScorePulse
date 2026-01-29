@@ -54,7 +54,7 @@ const Header = () => {
             <Title><Logo src={logo} alt="ScorePulse" /><a href="/">ScorePulse</a></Title>
             <Navbar>
                 <NavItem><a href="/">Home</a></NavItem>
-                <NavItem><a href="/Live Scores">Live Scores</a></NavItem>
+                <NavItem><a href="/live-scores">Live Scores</a></NavItem>
                 <NavItem><a href="/Teams">Teams</a></NavItem>
                 <NavItem><a href="/Players">Players</a></NavItem>
                 <NavItem><a href="/Fixtures">Fixtures</a></NavItem>
