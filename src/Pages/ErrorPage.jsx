@@ -106,7 +106,7 @@ const ErrorPage = () => {
       {/* <Header /> */}
       <ErrorContainer>
         <ErrorContent>
-          <IconWrapper>⚽</IconWrapper>
+          <IconWrapper>🏏</IconWrapper>
           <ErrorCode>404</ErrorCode>
           <ErrorTitle>Page Not Found</ErrorTitle>
           <ErrorMessage>
