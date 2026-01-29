@@ -1,5 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Home from './Pages/Home'
+import LiveScores from './Pages/LiveScores'
+import ErrorPage from './Pages/ErrorPage'
 
 function App() {
 
@@ -8,6 +10,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/Live Scores" element={<LiveScores />} />
+          <Route path="*" element={<ErrorPage />} />
         </Routes>
       </BrowserRouter>
     
