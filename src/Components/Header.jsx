@@ -6,7 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 /* ---------- Styled ---------- */
 
 const HeaderContainer = styled.div`
-background-color: ${({ dark }) => (dark ? "#10172a" : "#1a2433")};
+  background-color: ${({ dark }) => (dark ? "#10172a" : "#1a2433")};
   width: 100vw;
   height: 12vh;
   display: flex;
@@ -78,15 +78,12 @@ const Header = () => {
 
       <Navbar>
         <NavItem href="/">Home</NavItem>
-        <NavItem href="/live-scores">Live Scores</NavItem>
         <NavItem href="/teams">Teams</NavItem>
+        <NavItem href="/rankings">Standings</NavItem>
         <NavItem href="/players">Players</NavItem>
         <NavItem href="/fixtures">Fixtures</NavItem>
-        <NavItem href="/standings">Standings</NavItem>
 
-        <Toggle onClick={toggleDarkMode}>
-          {darkMode ? "☀️" : "🌙"}
-        </Toggle>
+        <Toggle onClick={toggleDarkMode}>{darkMode ? "☀️" : "🌙"}</Toggle>
       </Navbar>
     </HeaderContainer>
   );

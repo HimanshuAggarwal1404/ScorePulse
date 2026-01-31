@@ -2,38 +2,39 @@ import React from "react";
 import styled from "styled-components";
 import { useTheme } from "../context/ThemeContext";
 
-/* ---------- Theme Tokens ---------- */
+/* ---------- TOKENS ---------- */
 
 const colors = {
   light: {
     cardBg: "#ffffff",
     border: "#e5e7eb",
+    liveAccent: "#dc2626",
     textPrimary: "#0f172a",
     textSecondary: "#64748b",
     textMuted: "#94a3b8",
     highlight: "#2563eb",
-    live: "#dc2626",
   },
   dark: {
     cardBg: "#151c2f",
     border: "#24304a",
+    liveAccent: "#f87171",
     textPrimary: "#f5f7fa",
     textSecondary: "#c7d0dd",
     textMuted: "#9aa4b2",
     highlight: "#60a5fa",
-    live: "#f87171",
   },
 };
 
-/* ---------- Styled ---------- */
+/* ---------- STYLED ---------- */
 
 const Card = styled.div`
   background: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.border};
+  border-left: ${({ isLive, theme }) =>
+    isLive ? `4px solid ${theme.liveAccent}` : "1px solid " + theme.border};
   border-radius: 14px;
   padding: 14px 16px;
-  font-family: "Inter", "Segoe UI", sans-serif;
-  user-select: none;
+  font-family: "Inter", sans-serif;
 `;
 
 const Header = styled.div`
@@ -45,20 +46,19 @@ const Header = styled.div`
 const MatchType = styled.span`
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
   color: ${({ theme }) => theme.textSecondary};
+  text-transform: uppercase;
 `;
 
 const Live = styled.span`
   font-size: 11px;
   font-weight: 700;
-  color: ${({ theme }) => theme.live};
+  color: ${({ theme }) => theme.liveAccent};
 `;
 
 const TeamRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 6px 0;
 `;
 
@@ -68,7 +68,7 @@ const TeamLeft = styled.div`
   gap: 10px;
 `;
 
-const TeamBadge = styled.div`
+const Badge = styled.div`
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -78,7 +78,6 @@ const TeamBadge = styled.div`
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: ${({ theme }) => theme.textPrimary};
 `;
 
 const TeamName = styled.span`
@@ -98,7 +97,7 @@ const ScoreBlock = styled.div`
 `;
 
 const Score = styled.div`
-  font-size: 16px;
+  font-size: ${({ isLive }) => (isLive ? "17px" : "15px")};
   font-weight: 700;
   color: ${({ theme }) => theme.textPrimary};
 `;
@@ -111,62 +110,51 @@ const Overs = styled.div`
 const Status = styled.div`
   margin-top: 10px;
   font-size: 13px;
-  font-weight: 500;
   color: ${({ theme }) => theme.textSecondary};
 `;
 
-/* ---------- Component ---------- */
+/* ---------- COMPONENT ---------- */
 
 const MatchCard = ({ matchData }) => {
   const { darkMode } = useTheme();
   const theme = darkMode ? colors.dark : colors.light;
 
   const { team1, team2, status, live, type } = matchData;
-
-  /* ---------- CRITICAL STATE LOGIC ---------- */
-
   const statusText = status?.toLowerCase() || "";
 
   const isCompleted =
     statusText.includes("won") ||
-    statusText.includes("beat") ||
     statusText.includes("draw") ||
-    statusText.includes("tie") ||
-    statusText.includes("no result") ||
-    statusText.includes("abandoned");
+    statusText.includes("tie");
 
   const isLive = live && !isCompleted;
-
-  /* ---------- Batting Team (ONLY if LIVE & chasing) ---------- */
 
   const battingTeam =
     isLive && statusText.includes("need") ? team2 : null;
 
-  const teamsToRender = battingTeam
+  const teams = battingTeam
     ? [battingTeam, battingTeam === team1 ? team2 : team1]
     : [team1, team2];
 
-  /* ---------- Render ---------- */
-
   return (
-    <Card theme={theme}>
+    <Card theme={theme} isLive={isLive}>
       <Header>
         <MatchType theme={theme}>{type}</MatchType>
         {isLive && <Live theme={theme}>LIVE</Live>}
       </Header>
 
-      {teamsToRender.map((team, index) => (
+      {teams.map((team, i) => (
         <TeamRow key={team.code}>
           <TeamLeft>
-            <TeamBadge theme={theme}>{team.code}</TeamBadge>
+            <Badge theme={theme}>{team.code}</Badge>
             <TeamName theme={theme}>{team.name}</TeamName>
-            {index === 0 && battingTeam && (
+            {i === 0 && battingTeam && (
               <Batting theme={theme}>• BAT</Batting>
             )}
           </TeamLeft>
 
           <ScoreBlock>
-            <Score theme={theme}>
+            <Score theme={theme} isLive={isLive}>
               {team.score}/{team.wickets}
             </Score>
             <Overs theme={theme}>{team.overs} ov</Overs>
@@ -174,7 +162,7 @@ const MatchCard = ({ matchData }) => {
         </TeamRow>
       ))}
 
-      {status && <Status theme={theme}>{status}</Status>}
+      <Status theme={theme}>{status}</Status>
     </Card>
   );
 };
