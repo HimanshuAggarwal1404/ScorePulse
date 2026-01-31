@@ -1,11 +1,11 @@
 import React from 'react'
 import Header from '../Components/Header'
-import MatchCard from '../Components/MatchCard'
+import MatchCarousel from '../Components/MatchCarousel'
 const Home = () => {
   return (
     <>
       <Header />
-      <MatchCard />
+      <MatchCarousel />
     </>
   )
 }

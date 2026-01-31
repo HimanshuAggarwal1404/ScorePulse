@@ -3,16 +3,21 @@ import styled from 'styled-components'
 
 const CardContainer = styled.div`
   width: 100%;
-  max-width:30vw;
+  max-width: 30vw;
+  max-height: 30vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
-  border-radius: 20px;
-  padding: 24px;
-  position: relative;
+  border-radius: 10px;
+  padding: 10px;
+  // position: relative;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(56, 189, 248, 0.3);
   transition: all 0.3s ease;
   font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
 
   &::before {
     content: '';
@@ -43,15 +48,18 @@ const CardContainer = styled.div`
 `;
 
 const MatchType = styled.div`
-  font-size: 12px;
+display: flex;
+height: 10%;
+  font-size: clamp(10px, 2vw, 14px);
   text-transform: uppercase;
   letter-spacing: 2px;
   color: #38bdf8;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: clamp(8px, 5%, 16px);
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 
   &::before {
     content: '';
@@ -61,6 +69,7 @@ const MatchType = styled.div`
     border-radius: 50%;
     box-shadow: 0 0 10px #ef4444;
     animation: pulse 2s infinite;
+    flex-shrink: 0;
   }
 
   @keyframes pulse {
@@ -71,35 +80,44 @@ const MatchType = styled.div`
 
 const MatchContent = styled.div`
   display: flex;
-  align-items: center;
+  height: 80%;
+  width: 100%;
+  flex-direction: row;
+  overflow: hidden;  align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: clamp(12px, 4%, 24px);
+  flex: 1;
+  min-height: 0;
 `;
 
 const TeamsSection = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  justify-content: space-between;
+  gap: clamp(12px, 5%, 20px);
+  min-height: 0;
 `;
 
 const TeamRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: clamp(10px, 3%, 16px);
+  flex-shrink: 0;
 `;
 
 const FlagPlaceholder = styled.div`
-  width: 48px;
-  height: 48px;
+  width: clamp(36px, 10%, 52px);
+  aspect-ratio: 1;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
   border: 2px solid rgba(56, 189, 248, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: clamp(18px, 4vw, 28px);
   transition: all 0.3s ease;
+  flex-shrink: 0;
 
   &:hover {
     transform: scale(1.1);
@@ -108,28 +126,33 @@ const FlagPlaceholder = styled.div`
 `;
 
 const TeamName = styled.div`
-  font-size: 20px;
+  font-size: clamp(14px, 3vw, 22px);
   font-weight: 700;
   color: #f1f5f9;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ScoresSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-width: 80px;
+  justify-content: space-between;
+  gap: clamp(12px, 5%, 20px);
+  flex-shrink: 0;
+  min-height: 0;
 `;
 
 const Score = styled.div`
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
   border: 2px solid rgba(56, 189, 248, 0.4);
   border-radius: 12px;
-  padding: 12px 20px;
+  padding: clamp(8px, 2vw, 16px) clamp(12px, 3vw, 24px);
   text-align: center;
-  font-size: 28px;
+  font-size: clamp(20px, 5vw, 32px);
   font-weight: 800;
   color: #38bdf8;
   text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
@@ -137,6 +160,7 @@ const Score = styled.div`
   letter-spacing: 2px;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  flex-shrink: 0;
 
   &:hover {
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%);
@@ -153,21 +177,23 @@ const Separator = styled.div`
     rgba(56, 189, 248, 0.3) 50%, 
     transparent 100%
   );
-  margin: 0 -8px;
+  flex-shrink: 0;
 `;
 
 const ResultSection = styled.div`
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: auto;
+  height: 10%;
+  padding-top: clamp(8px, 3%, 12px);
   border-top: 1px solid rgba(56, 189, 248, 0.2);
   text-align: center;
-  font-size: 14px;
+  font-size: clamp(11px, 2vw, 14px);
   font-weight: 600;
   color: #ef4444;
   text-transform: uppercase;
   letter-spacing: 1px;
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
   animation: glow 2s ease-in-out infinite;
+  flex-shrink: 0;
 
   @keyframes glow {
     0%, 100% { opacity: 1; }

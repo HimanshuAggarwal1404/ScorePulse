@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import logo from '../assets/Logo.png'
+import { Tabs } from '@heroui/react';
 const HeaderContainer = styled.div`
 a{
   text-decoration: none;
