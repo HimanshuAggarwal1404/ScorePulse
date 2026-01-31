@@ -2,14 +2,12 @@ import React, { useRef, useState } from "react";
 import styled from "styled-components";
 import MatchCard from "./MatchCard";
 
-/* ---------- Wrapper ---------- */
+/* ---------- Styled ---------- */
 
 const Wrapper = styled.div`
   position: relative;
   width: 100%;
 `;
-
-/* ---------- Track ---------- */
 
 const Track = styled.div`
   display: flex;
@@ -17,7 +15,7 @@ const Track = styled.div`
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 4px 2px 12px;
+  padding: 6px 2px 14px;
 
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -30,42 +28,34 @@ const Item = styled.div`
   scroll-snap-align: start;
 `;
 
-/* ---------- Arrows ---------- */
-
 const Arrow = styled.button`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 2;
+  z-index: 5;
 
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: none;
-  background: ${({ disabled }) =>
-    disabled ? "#ddd" : "rgba(0,0,0,0.65)"};
 
+  background: rgba(0, 0, 0, 0.65);
   color: white;
   font-size: 18px;
-  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-  opacity: ${({ disabled }) => (disabled ? 0.4 : 0.85)};
-  transition: all 0.2s ease;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  cursor: pointer;
+  opacity: ${({ disabled }) => (disabled ? 0.3 : 0.9)};
 
   &:hover {
-    opacity: ${({ disabled }) => (disabled ? 0.4 : 1)};
+    opacity: ${({ disabled }) => (disabled ? 0.3 : 1)};
   }
 `;
 
 const LeftArrow = styled(Arrow)`
-  left: -12px;
+  left: -14px;
 `;
 
 const RightArrow = styled(Arrow)`
-  right: -12px;
+  right: -14px;
 `;
 
 /* ---------- Component ---------- */
@@ -75,7 +65,6 @@ const MatchCarousel = ({
   cardsPerView = 3,
   scrollBy = 2,
   gap = 16,
-  darkMode = false,
 }) => {
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
@@ -87,12 +76,12 @@ const MatchCarousel = ({
     setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 5);
   };
 
-  const scroll = (direction) => {
+  const scroll = (dir) => {
     const cardWidth =
       trackRef.current.clientWidth / cardsPerView + gap;
 
     trackRef.current.scrollBy({
-      left: direction * cardWidth * scrollBy,
+      left: dir * cardWidth * scrollBy,
       behavior: "smooth",
     });
 
@@ -112,7 +101,7 @@ const MatchCarousel = ({
       <Track ref={trackRef} gap={gap} onScroll={updateEdges}>
         {matches.map((match, i) => (
           <Item key={i} cardsPerView={cardsPerView}>
-            <MatchCard matchData={match} darkMode={darkMode} />
+            <MatchCard matchData={match} />
           </Item>
         ))}
       </Track>

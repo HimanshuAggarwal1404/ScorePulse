@@ -1,62 +1,51 @@
 import React from "react";
 import styled from "styled-components";
+import { useTheme } from "../context/ThemeContext";
 
-/* ---------- Colors ---------- */
+/* ---------- Theme Tokens ---------- */
 
 const colors = {
   light: {
-    bg: "#ffffff",
-    border: "#eaeaea",
-    textPrimary: "#111",
-    textSecondary: "#777",
-    textMuted: "#999",
-    hoverShadow: "rgba(0,0,0,0.08)",
-    live: "#d32f2f",
+    cardBg: "#ffffff",
+    border: "#e5e7eb",
+    textPrimary: "#0f172a",
+    textSecondary: "#64748b",
+    textMuted: "#94a3b8",
+    highlight: "#2563eb",
+    live: "#dc2626",
   },
   dark: {
-    bg: "#121212",
-    border: "#2a2a2a",
-    textPrimary: "#f5f5f5",
-    textSecondary: "#b5b5b5",
-    textMuted: "#888",
-    hoverShadow: "rgba(0,0,0,0.5)",
-    live: "#ff4d4d",
+    cardBg: "#151c2f",
+    border: "#24304a",
+    textPrimary: "#f5f7fa",
+    textSecondary: "#c7d0dd",
+    textMuted: "#9aa4b2",
+    highlight: "#60a5fa",
+    live: "#f87171",
   },
 };
 
-/* ---------- Card ---------- */
+/* ---------- Styled ---------- */
 
 const Card = styled.div`
-  width: 100%;
-  max-width: 360px;
-  background: ${({ theme }) => theme.bg};
-  border-radius: 12px;
+  background: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 14px;
   padding: 14px 16px;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.2s ease;
   font-family: "Inter", "Segoe UI", sans-serif;
-
-  &:hover {
-    box-shadow: 0 8px 22px ${({ theme }) => theme.hoverShadow};
-    transform: translateY(-2px);
-  }
+  user-select: none;
 `;
-
-/* ---------- Header ---------- */
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 `;
 
 const MatchType = styled.span`
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
   color: ${({ theme }) => theme.textSecondary};
 `;
 
@@ -66,18 +55,11 @@ const Live = styled.span`
   color: ${({ theme }) => theme.live};
 `;
 
-/* ---------- Teams ---------- */
-
-const Teams = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
 const TeamRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 6px 0;
 `;
 
 const TeamLeft = styled.div`
@@ -105,13 +87,13 @@ const TeamName = styled.span`
   color: ${({ theme }) => theme.textPrimary};
 `;
 
-const Overs = styled.span`
-  font-size: 12px;
-  color: ${({ theme }) => theme.textMuted};
-  margin-left: 6px;
+const Batting = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.highlight};
 `;
 
-const TeamRight = styled.div`
+const ScoreBlock = styled.div`
   text-align: right;
 `;
 
@@ -121,10 +103,13 @@ const Score = styled.div`
   color: ${({ theme }) => theme.textPrimary};
 `;
 
-/* ---------- Status ---------- */
+const Overs = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.textMuted};
+`;
 
 const Status = styled.div`
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: 13px;
   font-weight: 500;
   color: ${({ theme }) => theme.textSecondary};
@@ -132,36 +117,64 @@ const Status = styled.div`
 
 /* ---------- Component ---------- */
 
-const MatchCard = ({ matchData, darkMode = false }) => {
+const MatchCard = ({ matchData }) => {
+  const { darkMode } = useTheme();
   const theme = darkMode ? colors.dark : colors.light;
 
-  const data = matchData;
+  const { team1, team2, status, live, type } = matchData;
+
+  /* ---------- CRITICAL STATE LOGIC ---------- */
+
+  const statusText = status?.toLowerCase() || "";
+
+  const isCompleted =
+    statusText.includes("won") ||
+    statusText.includes("beat") ||
+    statusText.includes("draw") ||
+    statusText.includes("tie") ||
+    statusText.includes("no result") ||
+    statusText.includes("abandoned");
+
+  const isLive = live && !isCompleted;
+
+  /* ---------- Batting Team (ONLY if LIVE & chasing) ---------- */
+
+  const battingTeam =
+    isLive && statusText.includes("need") ? team2 : null;
+
+  const teamsToRender = battingTeam
+    ? [battingTeam, battingTeam === team1 ? team2 : team1]
+    : [team1, team2];
+
+  /* ---------- Render ---------- */
 
   return (
     <Card theme={theme}>
       <Header>
-        <MatchType theme={theme}>{data.type}</MatchType>
-        {data.live && <Live theme={theme}>LIVE</Live>}
+        <MatchType theme={theme}>{type}</MatchType>
+        {isLive && <Live theme={theme}>LIVE</Live>}
       </Header>
 
-      <Teams>
-        {[data.team1, data.team2].map((team, i) => (
-          <TeamRow key={i}>
-            <TeamLeft>
-              <TeamBadge theme={theme}>{team.code}</TeamBadge>
-              <TeamName theme={theme}>{team.name}</TeamName>
-              <Overs theme={theme}>{team.overs} ov</Overs>
-            </TeamLeft>
-            <TeamRight>
-              <Score theme={theme}>
-                {team.score}/{team.wickets}
-              </Score>
-            </TeamRight>
-          </TeamRow>
-        ))}
-      </Teams>
+      {teamsToRender.map((team, index) => (
+        <TeamRow key={team.code}>
+          <TeamLeft>
+            <TeamBadge theme={theme}>{team.code}</TeamBadge>
+            <TeamName theme={theme}>{team.name}</TeamName>
+            {index === 0 && battingTeam && (
+              <Batting theme={theme}>• BAT</Batting>
+            )}
+          </TeamLeft>
 
-      {data.status && <Status theme={theme}>{data.status}</Status>}
+          <ScoreBlock>
+            <Score theme={theme}>
+              {team.score}/{team.wickets}
+            </Score>
+            <Overs theme={theme}>{team.overs} ov</Overs>
+          </ScoreBlock>
+        </TeamRow>
+      ))}
+
+      {status && <Status theme={theme}>{status}</Status>}
     </Card>
   );
 };
