@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+/* ---------- Pages ---------- */
+
 import Home from "./Pages/Home";
 import Teams from "./Pages/Teams";
 import Players from "./Pages/Players";
 import Rankings from "./Pages/Rankings";
-import ErrorPage from "./Pages/ErrorPage";
-import EntryAnimation from "./Components/EntryAnimation";
 import Fixtures from "./Pages/Fixtures";
+import Tournaments from "./Pages/Tournaments";
+import PointsTable from "./Pages/PointsTable";
+import ErrorPage from "./Pages/ErrorPage";
+
+/* ---------- Components ---------- */
+
+import EntryAnimation from "./Components/EntryAnimation";
+
+/* ---------- App ---------- */
 
 const App = () => {
   const [showIntro, setShowIntro] = useState(false);
@@ -31,13 +40,22 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Home */}
         <Route path="/" element={<Home />} />
+
+        {/* Core Pages */}
         <Route path="/teams" element={<Teams />} />
         <Route path="/players" element={<Players />} />
         <Route path="/rankings" element={<Rankings />} />
-        <Route path="*" element={<ErrorPage />} />
         <Route path="/fixtures" element={<Fixtures />} />
-        
+
+        {/* Tournaments */}
+        <Route path="/tournaments" element={<Tournaments />} />
+        <Route path="/tournament/:id" element={<PointsTable />} />
+        <Route path="/tournament/:id/points" element={<PointsTable />} />
+
+        {/* 404 */}
+        <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>
   );

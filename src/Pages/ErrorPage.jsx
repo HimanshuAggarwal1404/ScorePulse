@@ -1,6 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
 import { useTheme } from "../context/ThemeContext";
 
@@ -31,7 +31,6 @@ const tokens = {
 
 /* ---------- ANIMATIONS ---------- */
 
-/* Cricket emoji drop-in */
 const dropIn = keyframes`
   0% {
     transform: translateY(-12px) rotate(-12deg);
@@ -43,7 +42,6 @@ const dropIn = keyframes`
   }
 `;
 
-/* Glow that calms down */
 const glowSettle = keyframes`
   0% {
     text-shadow:
@@ -159,11 +157,34 @@ const SecondaryButton = styled(Link)`
   }
 `;
 
+const BackButton = styled.button`
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border};
+  background: transparent;
+  color: ${({ theme }) => theme.text};
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.border};
+  }
+`;
+
 /* ---------- PAGE ---------- */
 
 const ErrorPage = () => {
   const { darkMode } = useTheme();
   const theme = darkMode ? tokens.dark : tokens.light;
+  const navigate = useNavigate();
+
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
     <Page theme={theme}>
@@ -183,9 +204,14 @@ const ErrorPage = () => {
             <PrimaryButton to="/" theme={theme}>
               Go to Home
             </PrimaryButton>
+
             <SecondaryButton to="/fixtures" theme={theme}>
               View Matches
             </SecondaryButton>
+
+            <BackButton onClick={goBack} theme={theme}>
+              ← Go Back
+            </BackButton>
           </Actions>
         </Card>
       </ErrorContainer>
