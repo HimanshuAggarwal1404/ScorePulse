@@ -5,8 +5,12 @@ const ThemeContext = createContext();
 export const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
-    if (stored) return stored === "dark";
 
+    // 1️⃣ User preference (highest priority)
+    if (stored === "dark") return true;
+    if (stored === "light") return false;
+
+    // 2️⃣ System preference
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
 
@@ -14,10 +18,12 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
 
     document.body.style.backgroundColor = darkMode
-      ? "#0b1220" // dark navy
-      : "#f6f7f9"; // light neutral
+      ? "#0b1220"
+      : "#f6f7f9";
 
-    document.body.style.color = darkMode ? "#f5f7fa" : "#0f172a";
+    document.body.style.color = darkMode
+      ? "#f5f7fa"
+      : "#0f172a";
   }, [darkMode]);
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
