@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { useTheme } from "../context/ThemeContext";
 
-/* ---------- TOKENS ---------- */
+/* ---------- THEME ---------- */
 
 const colors = {
   light: {
@@ -10,7 +10,7 @@ const colors = {
     border: "#e5e7eb",
     liveAccent: "#dc2626",
     textPrimary: "#0f172a",
-    textSecondary: "#64748b",
+    textSecondary: "#475569",
     textMuted: "#94a3b8",
     highlight: "#2563eb",
   },
@@ -31,23 +31,27 @@ const Card = styled.div`
   background: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.border};
   border-left: ${({ isLive, theme }) =>
-    isLive ? `4px solid ${theme.liveAccent}` : "1px solid " + theme.border};
+    isLive ? `4px solid ${theme.liveAccent}` : `1px solid ${theme.border}`};
   border-radius: 14px;
   padding: 14px 16px;
   font-family: "Inter", sans-serif;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 `;
 
 const MatchType = styled.span`
   font-size: 12px;
   font-weight: 600;
-  color: ${({ theme }) => theme.textSecondary};
   text-transform: uppercase;
+  color: ${({ theme }) => theme.textSecondary};
 `;
 
 const Live = styled.span`
@@ -56,10 +60,18 @@ const Live = styled.span`
   color: ${({ theme }) => theme.liveAccent};
 `;
 
+/* ---------- TEAM ROW ---------- */
+
 const TeamRow = styled.div`
   display: flex;
   justify-content: space-between;
   padding: 6px 0;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 `;
 
 const TeamLeft = styled.div`
@@ -78,28 +90,52 @@ const Badge = styled.div`
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
+  flex-shrink: 0;
 `;
 
 const TeamName = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.textPrimary};
+  max-width: 150px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: 640px) {
+    max-width: 100%;
+    font-size: 15px;
+  }
 `;
 
 const Batting = styled.span`
   font-size: 11px;
   font-weight: 600;
   color: ${({ theme }) => theme.highlight};
+
+  @media (max-width: 640px) {
+    display: none;
+  }
 `;
 
 const ScoreBlock = styled.div`
   text-align: right;
+
+  @media (max-width: 640px) {
+    text-align: left;
+    margin-left: 38px; /* aligns under team name */
+  }
 `;
 
 const Score = styled.div`
   font-size: ${({ isLive }) => (isLive ? "17px" : "15px")};
   font-weight: 700;
   color: ${({ theme }) => theme.textPrimary};
+
+  @media (max-width: 640px) {
+    font-size: 18px;
+  }
 `;
 
 const Overs = styled.div`
@@ -107,10 +143,23 @@ const Overs = styled.div`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+/* ---------- STATUS ---------- */
+
 const Status = styled.div`
   margin-top: 10px;
   font-size: 13px;
   color: ${({ theme }) => theme.textSecondary};
+
+  @media (max-width: 640px) {
+    font-size: 12px;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `;
 
 /* ---------- COMPONENT ---------- */

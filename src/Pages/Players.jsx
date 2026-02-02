@@ -36,6 +36,10 @@ const Container = styled.div`
   max-width: 1200px;
   margin: 24px auto;
   padding: 0 16px;
+
+  @media (max-width: 768px) {
+    margin: 16px auto;
+  }
 `;
 
 const PageTitle = styled.h1`
@@ -43,12 +47,21 @@ const PageTitle = styled.h1`
   font-weight: 700;
   color: ${({ theme }) => theme.text};
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-bottom: 18px;
+  }
 `;
 
 /* ---------- TEAM SECTION ---------- */
 
 const TeamSection = styled.div`
   margin-bottom: 36px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 28px;
+  }
 `;
 
 const TeamHeader = styled.h2`
@@ -56,6 +69,11 @@ const TeamHeader = styled.h2`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
 `;
 
 /* ---------- GRID ---------- */
@@ -64,6 +82,11 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 `;
 
 /* ---------- PLAYER CARD ---------- */
@@ -80,6 +103,17 @@ const PlayerCard = styled.div`
     background: ${({ theme }) => theme.hover};
     transform: translateY(-2px);
   }
+
+  /* Disable hover effects on touch devices */
+  @media (hover: none) {
+    &:hover {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
 `;
 
 const PlayerImage = styled.div`
@@ -90,9 +124,13 @@ const PlayerImage = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: ${({ theme }) => theme.muted};
   margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    height: 110px;
+  }
 `;
 
 const PlayerName = styled.div`
@@ -100,14 +138,22 @@ const PlayerName = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   margin-bottom: 4px;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const PlayerRole = styled.div`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.muted};
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 `;
 
-/* ---------- TEMP DATA (BACKEND-LIKE) ---------- */
+/* ---------- TEMP DATA ---------- */
 
 const playersData = {
   India: [

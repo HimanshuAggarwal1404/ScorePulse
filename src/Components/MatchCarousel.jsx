@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import styled from "styled-components";
 import MatchCard from "./MatchCard";
 
@@ -24,9 +24,11 @@ const Track = styled.div`
 `;
 
 const Item = styled.div`
-  flex: 0 0 ${({ cardsPerView }) => 100 / cardsPerView}%;
+  flex: 0 0 ${({ perView }) => 100 / perView}%;
   scroll-snap-align: start;
 `;
+
+/* ---------- Arrows ---------- */
 
 const Arrow = styled.button`
   position: absolute;
@@ -48,14 +50,29 @@ const Arrow = styled.button`
   &:hover {
     opacity: ${({ disabled }) => (disabled ? 0.3 : 1)};
   }
+
+  /* Mobile: smaller + inside */
+  @media (max-width: 768px) {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
 `;
 
 const LeftArrow = styled(Arrow)`
   left: -14px;
+
+  @media (max-width: 768px) {
+    left: 6px;
+  }
 `;
 
 const RightArrow = styled(Arrow)`
   right: -14px;
+
+  @media (max-width: 768px) {
+    right: 6px;
+  }
 `;
 
 /* ---------- Component ---------- */
@@ -69,19 +86,36 @@ const MatchCarousel = ({
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  /* ---------- Detect Mobile ---------- */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const effectiveCardsPerView = isMobile ? 1 : cardsPerView;
+  const effectiveScrollBy = isMobile ? 1 : scrollBy;
 
   const updateEdges = () => {
     const el = trackRef.current;
+    if (!el) return;
+
     setAtStart(el.scrollLeft <= 5);
     setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 5);
   };
 
   const scroll = (dir) => {
-    const cardWidth =
-      trackRef.current.clientWidth / cardsPerView + gap;
+    const el = trackRef.current;
+    if (!el) return;
 
-    trackRef.current.scrollBy({
-      left: dir * cardWidth * scrollBy,
+    const cardWidth =
+      el.clientWidth / effectiveCardsPerView + gap;
+
+    el.scrollBy({
+      left: dir * cardWidth * effectiveScrollBy,
       behavior: "smooth",
     });
 
@@ -90,6 +124,7 @@ const MatchCarousel = ({
 
   return (
     <Wrapper>
+      {/* Arrows */}
       <LeftArrow disabled={atStart} onClick={() => scroll(-1)}>
         ‹
       </LeftArrow>
@@ -98,9 +133,10 @@ const MatchCarousel = ({
         ›
       </RightArrow>
 
+      {/* Track */}
       <Track ref={trackRef} gap={gap} onScroll={updateEdges}>
         {matches.map((match, i) => (
-          <Item key={i} cardsPerView={cardsPerView}>
+          <Item key={i} perView={effectiveCardsPerView}>
             <MatchCard matchData={match} />
           </Item>
         ))}

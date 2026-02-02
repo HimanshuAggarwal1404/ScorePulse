@@ -29,7 +29,7 @@ const themeTokens = {
 /* ---------- LAYOUT ---------- */
 
 const Page = styled.div`
-font-family: "Inter", sans-serif;
+  font-family: "Inter", sans-serif;
   min-height: 100vh;
   background: ${({ theme }) => theme.pageBg};
 `;
@@ -38,6 +38,10 @@ const Container = styled.div`
   max-width: 1200px;
   margin: 24px auto;
   padding: 0 16px;
+
+  @media (max-width: 768px) {
+    margin: 16px auto;
+  }
 `;
 
 const PageTitle = styled.h1`
@@ -45,12 +49,21 @@ const PageTitle = styled.h1`
   font-weight: 700;
   color: ${({ theme }) => theme.sectionTitle};
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-bottom: 18px;
+  }
 `;
 
 /* ---------- SECTION ---------- */
 
 const Section = styled.div`
   margin-bottom: 36px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 28px;
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -58,6 +71,11 @@ const SectionTitle = styled.h2`
   font-weight: 600;
   color: ${({ theme }) => theme.sectionTitle};
   margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+  }
 `;
 
 /* ---------- GRID ---------- */
@@ -66,6 +84,11 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 `;
 
 /* ---------- TEAM CARD ---------- */
@@ -82,18 +105,37 @@ const TeamCard = styled.div`
     background: ${({ theme }) => theme.hoverBg};
     transform: translateY(-2px);
   }
+
+  /* Disable hover lift on touch devices */
+  @media (hover: none) {
+    &:hover {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px 14px;
+  }
 `;
 
 const TeamName = styled.div`
   font-size: 1rem;
   font-weight: 600;
   color: ${({ theme }) => theme.textPrimary};
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const TeamMeta = styled.div`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textMuted};
   margin-top: 4px;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
 /* ---------- DATA (TEMP) ---------- */

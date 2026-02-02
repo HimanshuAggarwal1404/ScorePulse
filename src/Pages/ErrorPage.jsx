@@ -1,125 +1,196 @@
-import React from 'react'
-import styled from 'styled-components'
-import Header from '../Components/Header'
+import React from "react";
+import styled, { keyframes } from "styled-components";
+import { Link } from "react-router-dom";
+import Header from "../Components/Header";
+import { useTheme } from "../context/ThemeContext";
+
+/* ---------- THEME TOKENS ---------- */
+
+const tokens = {
+  light: {
+    bg: "#f6f7f9",
+    text: "#0f172a",
+    muted: "#64748b",
+    accent: "#2563eb",
+    card: "#ffffff",
+    border: "#e5e7eb",
+    glowStrong: "rgba(37, 99, 235, 0.45)",
+    glowSoft: "rgba(37, 99, 235, 0.2)",
+  },
+  dark: {
+    bg: "#0b1220",
+    text: "#f5f7fa",
+    muted: "#9aa4b2",
+    accent: "#60a5fa",
+    card: "#151c2f",
+    border: "#24304a",
+    glowStrong: "rgba(96, 165, 250, 0.65)",
+    glowSoft: "rgba(96, 165, 250, 0.3)",
+  },
+};
+
+/* ---------- ANIMATIONS ---------- */
+
+/* Cricket emoji drop-in */
+const dropIn = keyframes`
+  0% {
+    transform: translateY(-12px) rotate(-12deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+`;
+
+/* Glow that calms down */
+const glowSettle = keyframes`
+  0% {
+    text-shadow:
+      0 0 18px var(--glow-strong),
+      0 0 36px var(--glow-strong);
+  }
+  100% {
+    text-shadow:
+      0 0 8px var(--glow-soft),
+      0 0 16px var(--glow-soft);
+  }
+`;
+
+/* ---------- LAYOUT ---------- */
+
+const Page = styled.div`
+  min-height: 100vh;
+  background: ${({ theme }) => theme.bg};
+  font-family: "Inter", sans-serif;
+`;
 
 const ErrorContainer = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1a2433 0%, #0f1419 100%);
+  min-height: calc(100vh - 64px);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  font-family: 'Inter', sans-serif;
+  padding: 24px;
 `;
 
-const ErrorContent = styled.div`
+const Card = styled.div`
+  background: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 16px;
+  padding: 48px 40px;
+  max-width: 520px;
   text-align: center;
-  max-width: 600px;
+
+  @media (max-width: 768px) {
+    padding: 36px 24px;
+  }
 `;
 
-const ErrorCode = styled.h1`
-  font-size: 10rem;
-  font-weight: 900;
-  color: #ffffff;
-  margin: 0;
-  text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+/* ---------- ICON ---------- */
+
+const Icon = styled.div`
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+  animation: ${dropIn} 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+`;
+
+/* ---------- GLOWING 404 ---------- */
+
+const ErrorCode = styled.div`
+  font-size: 5.5rem;
+  font-weight: 800;
+  color: ${({ theme }) => theme.text};
   line-height: 1;
-  
-  @media (max-width: 768px) {
-    font-size: 6rem;
-  }
+  margin-bottom: 6px;
+
+  --glow-strong: ${({ theme }) => theme.glowStrong};
+  --glow-soft: ${({ theme }) => theme.glowSoft};
+
+  animation: ${glowSettle} 4s ease forwards;
 `;
 
 const ErrorTitle = styled.h2`
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 1rem 0;
-  
-  @media (max-width: 768px) {
-    font-size: 1.8rem;
-  }
+  font-size: 1.6rem;
+  color: ${({ theme }) => theme.text};
 `;
 
 const ErrorMessage = styled.p`
-  font-size: 1.2rem;
-  color: #b0b8c1;
-  margin: 1.5rem 0 2.5rem;
+  margin-top: 12px;
+  font-size: 1rem;
+  color: ${({ theme }) => theme.muted};
   line-height: 1.6;
-  
-  @media (max-width: 768px) {
-    font-size: 1rem;
-  }
 `;
 
-const ButtonGroup = styled.div`
+/* ---------- ACTIONS ---------- */
+
+const Actions = styled.div`
+  margin-top: 28px;
   display: flex;
-  gap: 1rem;
+  gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
 `;
 
-const Button = styled.a`
-  padding: 0.875rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
+const PrimaryButton = styled(Link)`
+  padding: 10px 20px;
   border-radius: 8px;
+  background: ${({ theme }) => theme.accent};
+  color: #fff;
+  font-weight: 600;
   text-decoration: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  
-  ${props => props.primary ? `
-    background-color: #4a90e2;
-    color: white;
-    
-    &:hover {
-      background-color: #357abd;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
-    }
-  ` : `
-    background-color: transparent;
-    color: #ffffff;
-    border: 2px solid #4a90e2;
-    
-    &:hover {
-      background-color: rgba(74, 144, 226, 0.1);
-      transform: translateY(-2px);
-    }
-  `}
-`;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 
-const IconWrapper = styled.div`
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  
-  @media (max-width: 768px) {
-    font-size: 3rem;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
   }
 `;
 
-const ErrorPage = () => {
-  return (
-    <>
-      {/* <Header /> */}
-      <ErrorContainer>
-        <ErrorContent>
-          <IconWrapper>🏏</IconWrapper>
-          <ErrorCode>404</ErrorCode>
-          <ErrorTitle>Page Not Found</ErrorTitle>
-          <ErrorMessage>
-            Looks like this page got bowled! The page you're looking for doesn't exist or has been moved.
-          </ErrorMessage>
-          <ButtonGroup>
-            <Button href="/" primary>Go Home</Button>
-            <Button href="/Live Scores">Live Scores</Button>
-          </ButtonGroup>
-        </ErrorContent>
-      </ErrorContainer>
-    </>
-  )
-}
+const SecondaryButton = styled(Link)`
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border};
+  color: ${({ theme }) => theme.text};
+  font-weight: 600;
+  text-decoration: none;
 
-export default ErrorPage
+  &:hover {
+    background: ${({ theme }) => theme.border};
+  }
+`;
+
+/* ---------- PAGE ---------- */
+
+const ErrorPage = () => {
+  const { darkMode } = useTheme();
+  const theme = darkMode ? tokens.dark : tokens.light;
+
+  return (
+    <Page theme={theme}>
+      <Header />
+
+      <ErrorContainer>
+        <Card theme={theme}>
+          <Icon>🏏</Icon>
+          <ErrorCode theme={theme}>404</ErrorCode>
+          <ErrorTitle theme={theme}>Page Not Found</ErrorTitle>
+          <ErrorMessage theme={theme}>
+            Looks like this page got bowled. The link might be broken,
+            or the page has been moved.
+          </ErrorMessage>
+
+          <Actions>
+            <PrimaryButton to="/" theme={theme}>
+              Go to Home
+            </PrimaryButton>
+            <SecondaryButton to="/fixtures" theme={theme}>
+              View Matches
+            </SecondaryButton>
+          </Actions>
+        </Card>
+      </ErrorContainer>
+    </Page>
+  );
+};
+
+export default ErrorPage;

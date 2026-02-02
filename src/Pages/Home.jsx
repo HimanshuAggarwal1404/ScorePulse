@@ -2,9 +2,10 @@ import React from "react";
 import styled from "styled-components";
 import Header from "../Components/Header";
 import MatchCarousel from "../Components/MatchCarousel";
+import MatchCarouselSkeleton from "../Components/MatchCarouselSkeleton";
 import { useTheme } from "../context/ThemeContext";
 
-/* ---------- MATCH DATA ---------- */
+/* ---------- MATCH DATA (TEMP MOCK) ---------- */
 
 const matchesData = [
   {
@@ -34,13 +35,6 @@ const matchesData = [
     team1: { name: "Chennai Super Kings", code: "CSK", score: "187", wickets: "5", overs: "20.0" },
     team2: { name: "Mumbai Indians", code: "MI", score: "176", wickets: "8", overs: "20.0" },
     status: "CSK won by 11 runs",
-  },
-  {
-    type: "ODI",
-    live: false,
-    team1: { name: "India", code: "IND", score: "302", wickets: "7", overs: "50.0" },
-    team2: { name: "Sri Lanka", code: "SL", score: "246", wickets: "10", overs: "48.1" },
-    status: "India won by 56 runs",
   },
 ];
 
@@ -79,17 +73,14 @@ const latestNews = [
     image: "https://images.unsplash.com/photo-1593766788306-28561086694b",
     meta: "ICC • 6h ago",
   },
-  {
-    title: "Young talents to watch in upcoming IPL season",
-    image: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d",
-    meta: "IPL • Yesterday",
-  },
 ];
 
-/* ---------- STYLED ---------- */
+/* ---------- STYLES ---------- */
 
 const Page = styled.div`
+  min-height: 100vh;
   font-family: "Inter", sans-serif;
+  background: ${({ dark }) => (dark ? "#0b1220" : "#f6f7f9")};
 `;
 
 const Container = styled.div`
@@ -104,36 +95,57 @@ const SectionTitle = styled.h2`
   font-weight: 700;
 `;
 
+const ViewAllWrapper = styled.div`
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const ViewAllButton = styled.a`
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: ${({ dark }) => (dark ? "#60a5fa" : "#2563eb")};
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+/* ---------- TOP STORIES ---------- */
+
 const TopStoriesGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const StoryCard = styled.div`
   background: ${({ theme }) => theme.cardBg};
   border-radius: 14px;
   overflow: hidden;
-  cursor: pointer;
-`;
-
-const StoryImageWrapper = styled.div`
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
 `;
 
 const StoryImage = styled.img`
   width: 100%;
-  height: 100%;
+  height: 180px;
   object-fit: cover;
 `;
 
 const StoryTitle = styled.div`
   padding: 14px;
   font-weight: 600;
-  line-height: 1.3;
 `;
+
+/* ---------- NEWS ---------- */
 
 const NewsGrid = styled.div`
   display: grid;
@@ -143,20 +155,13 @@ const NewsGrid = styled.div`
 
 const NewsCard = styled.div`
   background: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-`;
-
-const NewsImageWrapper = styled.div`
-  height: 140px;
   overflow: hidden;
 `;
 
 const NewsImage = styled.img`
   width: 100%;
-  height: 100%;
+  height: 140px;
   object-fit: cover;
 `;
 
@@ -165,9 +170,7 @@ const NewsContent = styled.div`
 `;
 
 const NewsTitle = styled.div`
-  font-size: 0.95rem;
   font-weight: 600;
-  line-height: 1.3;
   margin-bottom: 6px;
 `;
 
@@ -183,28 +186,37 @@ const Home = () => {
 
   const theme = {
     cardBg: darkMode ? "#151c2f" : "#ffffff",
-    border: darkMode ? "#24304a" : "#e5e7eb",
     muted: darkMode ? "#9aa4b2" : "#64748b",
   };
 
   return (
-    <Page>
+    <Page dark={darkMode}>
       <Header />
 
       <Container>
-        {/* LIVE NOW */}
-        <SectionTitle>LIVE NOW</SectionTitle>
-        <MatchCarousel matches={matchesData} cardsPerView={3} scrollBy={2} />
+        {/* RECENT MATCHES */}
+        <SectionTitle>RECENT MATCHES</SectionTitle>
+
+        {matchesData.length === 0 ? (
+          <MatchCarouselSkeleton />
+        ) : (
+          <>
+            <MatchCarousel matches={matchesData} cardsPerView={3} scrollBy={2} />
+            <ViewAllWrapper>
+              <ViewAllButton dark={darkMode} href="/fixtures">
+                View all matches →
+              </ViewAllButton>
+            </ViewAllWrapper>
+          </>
+        )}
 
         {/* TOP STORIES */}
         <SectionTitle>TOP STORIES</SectionTitle>
         <TopStoriesGrid>
-          {topStories.map((story, i) => (
+          {topStories.map((s, i) => (
             <StoryCard key={i} theme={theme}>
-              <StoryImageWrapper>
-                <StoryImage src={story.image} alt={story.title} />
-              </StoryImageWrapper>
-              <StoryTitle>{story.title}</StoryTitle>
+              <StoryImage src={s.image} alt={s.title} loading="lazy" />
+              <StoryTitle>{s.title}</StoryTitle>
             </StoryCard>
           ))}
         </TopStoriesGrid>
@@ -212,14 +224,12 @@ const Home = () => {
         {/* LATEST NEWS */}
         <SectionTitle>LATEST NEWS</SectionTitle>
         <NewsGrid>
-          {latestNews.map((news, i) => (
+          {latestNews.map((n, i) => (
             <NewsCard key={i} theme={theme}>
-              <NewsImageWrapper>
-                <NewsImage src={news.image} alt={news.title} />
-              </NewsImageWrapper>
+              <NewsImage src={n.image} alt={n.title} loading="lazy" />
               <NewsContent>
-                <NewsTitle>{news.title}</NewsTitle>
-                <NewsMeta theme={theme}>{news.meta}</NewsMeta>
+                <NewsTitle>{n.title}</NewsTitle>
+                <NewsMeta theme={theme}>{n.meta}</NewsMeta>
               </NewsContent>
             </NewsCard>
           ))}
