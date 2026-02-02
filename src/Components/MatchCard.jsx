@@ -8,19 +8,19 @@ const colors = {
   light: {
     cardBg: "#ffffff",
     border: "#e5e7eb",
-    liveAccent: "#dc2626",
     textPrimary: "#0f172a",
-    textSecondary: "#475569",
+    textSecondary: "#64748b",
     textMuted: "#94a3b8",
+    liveAccent: "#dc2626",
     highlight: "#2563eb",
   },
   dark: {
     cardBg: "#151c2f",
     border: "#24304a",
-    liveAccent: "#f87171",
     textPrimary: "#f5f7fa",
     textSecondary: "#c7d0dd",
     textMuted: "#9aa4b2",
+    liveAccent: "#f87171",
     highlight: "#60a5fa",
   },
 };
@@ -28,30 +28,41 @@ const colors = {
 /* ---------- STYLED ---------- */
 
 const Card = styled.div`
+  position: relative;
   background: ${({ theme }) => theme.cardBg};
   border: 1px solid ${({ theme }) => theme.border};
-  border-left: ${({ isLive, theme }) =>
-    isLive ? `4px solid ${theme.liveAccent}` : `1px solid ${theme.border}`};
   border-radius: 14px;
   padding: 14px 16px;
   font-family: "Inter", sans-serif;
+  overflow: hidden;
 
-  @media (max-width: 640px) {
-    padding: 16px;
-  }
+  ${({ isLive, theme }) =>
+    isLive &&
+    `
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: ${theme.liveAccent};
+    }
+  `}
 `;
+
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 `;
 
 const MatchType = styled.span`
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
   color: ${({ theme }) => theme.textSecondary};
+  text-transform: uppercase;
 `;
 
 const Live = styled.span`
@@ -60,35 +71,31 @@ const Live = styled.span`
   color: ${({ theme }) => theme.liveAccent};
 `;
 
-/* ---------- TEAM ROW ---------- */
-
 const TeamRow = styled.div`
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 6px 0;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
 `;
 
 const TeamLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0; /* IMPORTANT for ellipsis */
+  flex: 1;
 `;
 
 const Badge = styled.div`
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: ${({ theme }) => theme.border};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 `;
@@ -97,69 +104,41 @@ const TeamName = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.textPrimary};
-  max-width: 150px;
 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  @media (max-width: 640px) {
-    max-width: 100%;
-    font-size: 15px;
-  }
 `;
 
 const Batting = styled.span`
   font-size: 11px;
   font-weight: 600;
   color: ${({ theme }) => theme.highlight};
-
-  @media (max-width: 640px) {
-    display: none;
-  }
+  flex-shrink: 0;
 `;
 
 const ScoreBlock = styled.div`
   text-align: right;
-
-  @media (max-width: 640px) {
-    text-align: left;
-    margin-left: 38px; /* aligns under team name */
-  }
+  flex-shrink: 0;
+  min-width: 72px; /* LOCKS RIGHT COLUMN */
 `;
 
 const Score = styled.div`
-  font-size: ${({ isLive }) => (isLive ? "17px" : "15px")};
+  font-size: 15px;
   font-weight: 700;
   color: ${({ theme }) => theme.textPrimary};
-
-  @media (max-width: 640px) {
-    font-size: 18px;
-  }
+  line-height: 1.1;
 `;
 
 const Overs = styled.div`
-  font-size: 12px;
+  font-size: 11px;
   color: ${({ theme }) => theme.textMuted};
 `;
-
-/* ---------- STATUS ---------- */
 
 const Status = styled.div`
   margin-top: 10px;
   font-size: 13px;
   color: ${({ theme }) => theme.textSecondary};
-
-  @media (max-width: 640px) {
-    font-size: 12px;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 `;
 
 /* ---------- COMPONENT ---------- */
@@ -203,7 +182,7 @@ const MatchCard = ({ matchData }) => {
           </TeamLeft>
 
           <ScoreBlock>
-            <Score theme={theme} isLive={isLive}>
+            <Score theme={theme}>
               {team.score}/{team.wickets}
             </Score>
             <Overs theme={theme}>{team.overs} ov</Overs>

@@ -1,0 +1,62 @@
+past: [
+    {
+      series: "India Tour of Australia 2024",
+      matches: [
+        {
+          id: "m1",
+          teams: "India vs Australia",
+          meta: "T20I • Melbourne",
+          status: "India won by 45 runs",
+        },
+        {
+          id: "m2",
+          teams: "India vs Australia",
+          meta: "ODI • Sydney",
+          status: "Australia won by 6 wickets",
+        },
+      ],
+    },
+  ],
+  current: [
+    {
+      series: "Pakistan Tour of New Zealand 2025",
+      matches: [
+        {
+          id: "m3",
+          teams: "New Zealand vs Pakistan",
+          meta: "Test • Wellington",
+          status: "Day 3 • NZ lead by 112 runs",
+        },
+      ],
+    },
+  ],
+  future: [
+    {
+      series: "England Tour of India 2025",
+      matches: [
+        {
+          id: "m4",
+          teams: "India vs England",
+          meta: "Test • Ahmedabad",
+          status: "Starts Tomorrow",
+        },
+        {
+          id: "m5",
+          teams: "India vs England",
+          meta: "ODI • Delhi",
+          status: "Starts in 3 days",
+        },
+      ],
+    },
+    {
+      series: "South Africa Tour of Australia 2025",
+      matches: [
+        {
+          id: "m6",
+          teams: "Australia vs South Africa",
+          meta: "ODI • Perth",
+          status: "Starts in 5 days",
+        },
+      ],
+    },
+  ],

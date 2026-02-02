@@ -11,6 +11,7 @@ import Fixtures from "./Pages/Fixtures";
 import Tournaments from "./Pages/Tournaments";
 import PointsTable from "./Pages/PointsTable";
 import ErrorPage from "./Pages/ErrorPage";
+import NetworkBanner from "./Components/NetworkBanner";
 
 /* ---------- Components ---------- */
 
@@ -39,6 +40,8 @@ const App = () => {
 
   return (
     <BrowserRouter>
+            <NetworkBanner />
+
       <Routes>
         {/* Home */}
         <Route path="/" element={<Home />} />

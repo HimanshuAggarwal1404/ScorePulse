@@ -1,39 +1,89 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Header from "../Components/Header";
 import MatchCarousel from "../Components/MatchCarousel";
 import MatchCarouselSkeleton from "../Components/MatchCarouselSkeleton";
+import EmptyState from "../Components/EmptyState";
 import { useTheme } from "../context/ThemeContext";
 
-/* ---------- MATCH DATA (TEMP MOCK) ---------- */
+/* ---------- MOCK MATCH DATA ---------- */
 
 const matchesData = [
+  
   {
     type: "ODI",
     live: true,
-    team1: { name: "England", code: "ENG", score: "268", wickets: "6", overs: "47.3" },
-    team2: { name: "South Africa", code: "SA", score: "198", wickets: "5", overs: "39.1" },
+    team1: {
+      name: "England",
+      code: "ENG",
+      score: "268",
+      wickets: "6",
+      overs: "47.3",
+    },
+    team2: {
+      name: "South Africa",
+      code: "SA",
+      score: "198",
+      wickets: "5",
+      overs: "39.1",
+    },
     status: "South Africa need 71 runs in 65 balls",
   },
   {
     type: "T20 International",
     live: true,
-    team1: { name: "India", code: "IND", score: "154", wickets: "3", overs: "16.2" },
-    team2: { name: "New Zealand", code: "NZ", score: "—", wickets: "—", overs: "—" },
+    team1: {
+      name: "India",
+      code: "IND",
+      score: "154",
+      wickets: "3",
+      overs: "16.2",
+    },
+    team2: {
+      name: "New Zealand",
+      code: "NZ",
+      score: "—",
+      wickets: "—",
+      overs: "—",
+    },
     status: "New Zealand need 42 runs in 22 balls",
   },
   {
     type: "Test Match",
     live: false,
-    team1: { name: "Australia", code: "AUS", score: "412", wickets: "9", overs: "132.0" },
-    team2: { name: "Pakistan", code: "PAK", score: "311", wickets: "10", overs: "101.4" },
+    team1: {
+      name: "Australia",
+      code: "AUS",
+      score: "412",
+      wickets: "9",
+      overs: "132.0",
+    },
+    team2: {
+      name: "Pakistan",
+      code: "PAK",
+      score: "311",
+      wickets: "10",
+      overs: "101.4",
+    },
     status: "Australia lead by 101 runs",
   },
   {
     type: "T20 League",
     live: false,
-    team1: { name: "Chennai Super Kings", code: "CSK", score: "187", wickets: "5", overs: "20.0" },
-    team2: { name: "Mumbai Indians", code: "MI", score: "176", wickets: "8", overs: "20.0" },
+    team1: {
+      name: "Chennai Super Kings",
+      code: "CSK",
+      score: "187",
+      wickets: "5",
+      overs: "20.0",
+    },
+    team2: {
+      name: "Mumbai Indians",
+      code: "MI",
+      score: "176",
+      wickets: "8",
+      overs: "20.0",
+    },
     status: "CSK won by 11 runs",
   },
 ];
@@ -183,11 +233,20 @@ const NewsMeta = styled.div`
 
 const Home = () => {
   const { darkMode } = useTheme();
+  const [loading, setLoading] = useState(true);
 
   const theme = {
     cardBg: darkMode ? "#151c2f" : "#ffffff",
     muted: darkMode ? "#9aa4b2" : "#64748b",
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Page dark={darkMode}>
@@ -197,11 +256,24 @@ const Home = () => {
         {/* RECENT MATCHES */}
         <SectionTitle>RECENT MATCHES</SectionTitle>
 
-        {matchesData.length === 0 ? (
+        {loading ? (
           <MatchCarouselSkeleton />
+        ) : matchesData.length === 0 ? (
+          <EmptyState
+            icon="🏏"
+            title="No matches right now"
+            text="Check upcoming fixtures or recent results"
+            actionLabel="View Fixtures"
+            actionTo="/fixtures"
+          />
         ) : (
           <>
-            <MatchCarousel matches={matchesData} cardsPerView={3} scrollBy={2} />
+            <MatchCarousel
+              matches={matchesData}
+              cardsPerView={3}
+              scrollBy={2}
+            />
+
             <ViewAllWrapper>
               <ViewAllButton dark={darkMode} href="/fixtures">
                 View all matches →

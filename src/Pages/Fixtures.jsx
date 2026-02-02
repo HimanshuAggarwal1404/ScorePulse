@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
+import EmptyState from "../Components/EmptyState";
 import { useTheme } from "../context/ThemeContext";
 
 /* ---------- THEME ---------- */
@@ -39,20 +40,11 @@ const Container = styled.div`
   max-width: 1100px;
   margin: 24px auto;
   padding: 0 16px;
-
-  @media (max-width: 768px) {
-    margin: 16px auto;
-  }
 `;
 
 const Title = styled.h1`
   color: ${({ theme }) => theme.text};
   margin-bottom: 16px;
-  font-size: 1.6rem;
-
-  @media (max-width: 768px) {
-    font-size: 1.4rem;
-  }
 `;
 
 /* ---------- STICKY TABS ---------- */
@@ -63,28 +55,18 @@ const StickyTabs = styled.div`
   z-index: 50;
   background: ${({ theme }) => theme.bg};
   padding: 12px 0;
-
-  @media (max-width: 768px) {
-    padding: 8px 0;
-  }
 `;
 
 const Tabs = styled.div`
   display: flex;
   gap: 12px;
-
-  @media (max-width: 768px) {
-    gap: 8px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  overflow-x: auto;
 `;
 
 const Tab = styled.button`
   background: ${({ active, theme }) =>
     active ? theme.accent : "transparent"};
-  color: ${({ active, theme }) =>
-    active ? "#fff" : theme.text};
+  color: ${({ active }) => (active ? "#fff" : "inherit")};
   border: 1px solid ${({ theme }) => theme.border};
   padding: 8px 14px;
   border-radius: 8px;
@@ -96,11 +78,6 @@ const Tab = styled.button`
     background: ${({ active, theme }) =>
       active ? theme.accent : theme.hover};
   }
-
-  @media (max-width: 768px) {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-  }
 `;
 
 /* ---------- SERIES BLOCK ---------- */
@@ -111,10 +88,6 @@ const SeriesBlock = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 12px;
   overflow: hidden;
-
-  @media (max-width: 768px) {
-    margin-top: 16px;
-  }
 `;
 
 const SeriesHeader = styled.div`
@@ -123,11 +96,6 @@ const SeriesHeader = styled.div`
   color: ${({ theme }) => theme.text};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   background: ${({ theme }) => theme.hover};
-
-  @media (max-width: 768px) {
-    padding: 12px 14px;
-    font-size: 0.95rem;
-  }
 `;
 
 /* ---------- MATCH LIST ---------- */
@@ -138,7 +106,6 @@ const MatchRow = styled.div`
   padding: 14px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   cursor: pointer;
-  align-items: center;
 
   &:hover {
     background: ${({ theme }) => theme.hover};
@@ -148,11 +115,9 @@ const MatchRow = styled.div`
     border-bottom: none;
   }
 
-  /* Mobile layout */
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 8px;
-    padding: 14px;
   }
 `;
 
@@ -165,10 +130,6 @@ const MatchInfo = styled.div`
 const Teams = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
-
-  @media (max-width: 768px) {
-    font-size: 0.95rem;
-  }
 `;
 
 const Meta = styled.div`
@@ -180,16 +141,12 @@ const Status = styled.div`
   font-size: 0.85rem;
   font-weight: 600;
   color: ${({ theme }) => theme.accent};
-
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-  }
 `;
 
 /* ---------- MOCK DATA ---------- */
 
 const fixturesData = {
-  past: [
+ past: [
     {
       series: "India Tour of Australia 2024",
       matches: [
@@ -265,6 +222,10 @@ const Fixtures = () => {
   const category = searchParams.get("type") || "current";
   const seriesList = fixturesData[category] || [];
 
+  const isEmpty =
+    seriesList.length === 0 ||
+    seriesList.every((s) => s.matches.length === 0);
+
   return (
     <Page theme={theme}>
       <Header />
@@ -291,26 +252,43 @@ const Fixtures = () => {
           </Tabs>
         </StickyTabs>
 
-        {seriesList.map((series) => (
-          <SeriesBlock key={series.series} theme={theme}>
-            <SeriesHeader theme={theme}>{series.series}</SeriesHeader>
+        {/* EMPTY STATE */}
+        {isEmpty && (
+          <EmptyState
+            icon="📅"
+            title="No matches right now"
+            text={
+              category === "current"
+                ? "There are no live or ongoing matches at the moment."
+                : "No matches available in this section."
+            }
+            actionLabel="View Upcoming Fixtures"
+            actionTo="/fixtures?type=future"
+          />
+        )}
 
-            {series.matches.map((m) => (
-              <MatchRow
-                key={m.id}
-                theme={theme}
-                onClick={() => navigate(`/match/${m.id}`)}
-              >
-                <MatchInfo>
-                  <Teams theme={theme}>{m.teams}</Teams>
-                  <Meta theme={theme}>{m.meta}</Meta>
-                </MatchInfo>
+        {/* SERIES LIST */}
+        {!isEmpty &&
+          seriesList.map((series) => (
+            <SeriesBlock key={series.series} theme={theme}>
+              <SeriesHeader theme={theme}>{series.series}</SeriesHeader>
 
-                <Status theme={theme}>{m.status}</Status>
-              </MatchRow>
-            ))}
-          </SeriesBlock>
-        ))}
+              {series.matches.map((m) => (
+                <MatchRow
+                  key={m.id}
+                  theme={theme}
+                  onClick={() => navigate(`/match/${m.id}`)}
+                >
+                  <MatchInfo>
+                    <Teams theme={theme}>{m.teams}</Teams>
+                    <Meta theme={theme}>{m.meta}</Meta>
+                  </MatchInfo>
+
+                  <Status theme={theme}>{m.status}</Status>
+                </MatchRow>
+              ))}
+            </SeriesBlock>
+          ))}
       </Container>
     </Page>
   );
