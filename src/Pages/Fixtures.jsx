@@ -39,11 +39,20 @@ const Container = styled.div`
   max-width: 1100px;
   margin: 24px auto;
   padding: 0 16px;
+
+  @media (max-width: 768px) {
+    margin: 16px auto;
+  }
 `;
 
 const Title = styled.h1`
   color: ${({ theme }) => theme.text};
   margin-bottom: 16px;
+  font-size: 1.6rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.4rem;
+  }
 `;
 
 /* ---------- STICKY TABS ---------- */
@@ -54,11 +63,21 @@ const StickyTabs = styled.div`
   z-index: 50;
   background: ${({ theme }) => theme.bg};
   padding: 12px 0;
+
+  @media (max-width: 768px) {
+    padding: 8px 0;
+  }
 `;
 
 const Tabs = styled.div`
   display: flex;
   gap: 12px;
+
+  @media (max-width: 768px) {
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 `;
 
 const Tab = styled.button`
@@ -71,10 +90,16 @@ const Tab = styled.button`
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  white-space: nowrap;
 
   &:hover {
     background: ${({ active, theme }) =>
       active ? theme.accent : theme.hover};
+  }
+
+  @media (max-width: 768px) {
+    padding: 6px 12px;
+    font-size: 0.85rem;
   }
 `;
 
@@ -86,6 +111,10 @@ const SeriesBlock = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 12px;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    margin-top: 16px;
+  }
 `;
 
 const SeriesHeader = styled.div`
@@ -94,6 +123,11 @@ const SeriesHeader = styled.div`
   color: ${({ theme }) => theme.text};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   background: ${({ theme }) => theme.hover};
+
+  @media (max-width: 768px) {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
 `;
 
 /* ---------- MATCH LIST ---------- */
@@ -104,6 +138,7 @@ const MatchRow = styled.div`
   padding: 14px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   cursor: pointer;
+  align-items: center;
 
   &:hover {
     background: ${({ theme }) => theme.hover};
@@ -111,6 +146,13 @@ const MatchRow = styled.div`
 
   &:last-child {
     border-bottom: none;
+  }
+
+  /* Mobile layout */
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 14px;
   }
 `;
 
@@ -123,6 +165,10 @@ const MatchInfo = styled.div`
 const Teams = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const Meta = styled.div`
@@ -134,9 +180,13 @@ const Status = styled.div`
   font-size: 0.85rem;
   font-weight: 600;
   color: ${({ theme }) => theme.accent};
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
-/* ---------- MOCK DATA (SERIES-WISE) ---------- */
+/* ---------- MOCK DATA ---------- */
 
 const fixturesData = {
   past: [
@@ -215,10 +265,6 @@ const Fixtures = () => {
   const category = searchParams.get("type") || "current";
   const seriesList = fixturesData[category] || [];
 
-  const openMatch = (id) => {
-    navigate(`/match/${id}`);
-  };
-
   return (
     <Page theme={theme}>
       <Header />
@@ -226,7 +272,6 @@ const Fixtures = () => {
       <Container>
         <Title theme={theme}>Fixtures</Title>
 
-        {/* STICKY CATEGORY TABS */}
         <StickyTabs theme={theme}>
           <Tabs>
             {[
@@ -246,7 +291,6 @@ const Fixtures = () => {
           </Tabs>
         </StickyTabs>
 
-        {/* SERIES GROUPED LIST */}
         {seriesList.map((series) => (
           <SeriesBlock key={series.series} theme={theme}>
             <SeriesHeader theme={theme}>{series.series}</SeriesHeader>
@@ -255,7 +299,7 @@ const Fixtures = () => {
               <MatchRow
                 key={m.id}
                 theme={theme}
-                onClick={() => openMatch(m.id)}
+                onClick={() => navigate(`/match/${m.id}`)}
               >
                 <MatchInfo>
                   <Teams theme={theme}>{m.teams}</Teams>
