@@ -110,7 +110,7 @@ const ErrorPage = () => {
           <ErrorCode>404</ErrorCode>
           <ErrorTitle>Page Not Found</ErrorTitle>
           <ErrorMessage>
-            Looks like this page got a red card! The page you're looking for doesn't exist or has been moved.
+            Looks like this page got bowled! The page you're looking for doesn't exist or has been moved.
           </ErrorMessage>
           <ButtonGroup>
             <Button href="/" primary>Go Home</Button>
