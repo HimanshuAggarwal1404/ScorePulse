@@ -69,16 +69,13 @@ const Tab = styled.button`
   font-weight: 600;
   cursor: pointer;
 
-  background: ${({ active, theme }) =>
-    active ? theme.accent : "transparent"};
-  color: ${({ active, theme }) =>
-    active ? "#fff" : theme.text};
+  background: ${({ active, theme }) => (active ? theme.accent : "transparent")};
+  color: ${({ active, theme }) => (active ? "#fff" : theme.text)};
 
   border: 1px solid ${({ theme }) => theme.border};
 
   &:hover {
-    background: ${({ active, theme }) =>
-      active ? theme.accent : theme.hover};
+    background: ${({ active, theme }) => (active ? theme.accent : theme.hover)};
   }
 `;
 
@@ -110,6 +107,9 @@ const Name = styled.div`
 `;
 
 const Badge = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 999px;
@@ -227,9 +227,7 @@ const Tournaments = () => {
 
             <Meta theme={theme}>{item.date}</Meta>
 
-            {item.result && (
-              <Result theme={theme}>{item.result}</Result>
-            )}
+            {item.result && <Result theme={theme}>{item.result}</Result>}
           </Card>
         ))}
       </Container>
