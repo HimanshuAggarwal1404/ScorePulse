@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
 import { useParams } from "react-router-dom";
+import styled from "styled-components";
 import Header from "../Components/Header";
 import { useTheme } from "../context/ThemeContext";
 
-/* ---------- THEME ---------- */
+/* ---------- THEME TOKENS ---------- */
 
 const tokens = {
   light: {
@@ -14,7 +14,13 @@ const tokens = {
     text: "#0f172a",
     muted: "#64748b",
     accent: "#2563eb",
+
     wicket: "#dc2626",
+    four: "#16a34a",
+    six: "#ea580c",
+
+    overBg: "#f1f5f9",
+    badgeBg: "#eef2ff",
   },
   dark: {
     bg: "#0b1220",
@@ -23,7 +29,13 @@ const tokens = {
     text: "#f5f7fa",
     muted: "#9aa4b2",
     accent: "#60a5fa",
+
     wicket: "#f87171",
+    four: "#22c55e",
+    six: "#fb923c",
+
+    overBg: "#0f172a",
+    badgeBg: "#1e293b",
   },
 };
 
@@ -37,94 +49,140 @@ const Page = styled.div`
 
 const Container = styled.div`
   max-width: 900px;
-  margin: 20px auto;
-  padding: 0 16px;
+  margin: 18px auto;
+  padding: 0 14px;
 `;
 
 /* ---------- MATCH HEADER ---------- */
 
 const MatchHeader = styled.div`
-  margin-bottom: 16px;
+  background: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 22px;
 `;
 
-const Teams = styled.h1`
-  font-size: 1.35rem;
+const Teams = styled.div`
+  font-size: 1.2rem;
+  font-weight: 700;
   color: ${({ theme }) => theme.text};
 `;
 
-const Result = styled.div`
-  margin-top: 4px;
-  font-size: 0.95rem;
+const MatchMeta = styled.div`
+  margin-top: 6px;
+  font-size: 0.85rem;
   color: ${({ theme }) => theme.muted};
 `;
 
-/* ---------- SCORECARD ---------- */
+/* ---------- SECTION ---------- */
 
-const SectionTitle = styled.h2`
-  margin: 24px 0 12px;
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.text};
+const Section = styled.div`
+  margin-top: 26px;
 `;
+
+const SectionTitle = styled.div`
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: ${({ theme }) => theme.muted};
+  margin-bottom: 14px;
+  text-transform: uppercase;
+`;
+
+/* ---------- SCORECARD ---------- */
 
 const InningCard = styled.div`
   background: ${({ theme }) => theme.card};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 12px;
-  padding: 14px;
+  padding: 14px 16px;
   margin-bottom: 10px;
 `;
 
-const InningTitle = styled.div`
+const InningTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const InningName = styled.div`
   font-weight: 700;
   color: ${({ theme }) => theme.text};
 `;
 
 const InningScore = styled.div`
-  margin-top: 4px;
   font-size: 0.95rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+`;
+
+const InningOvers = styled.div`
+  margin-top: 4px;
+  font-size: 0.8rem;
   color: ${({ theme }) => theme.muted};
 `;
 
 /* ---------- COMMENTARY ---------- */
 
-const OverBlock = styled.div`
-  margin-top: 18px;
+const CommentaryBox = styled.div`
+  background: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 12px;
+  overflow: hidden;
 `;
 
-const OverTitle = styled.div`
+const OverHeader = styled.div`
+  background: ${({ theme }) => theme.overBg};
+  padding: 8px 14px;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 6px;
+  color: ${({ theme }) => theme.muted};
 `;
 
 const BallRow = styled.div`
-  display: grid;
-  grid-template-columns: 48px 1fr 32px;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-
-  @media (max-width: 600px) {
-    grid-template-columns: 42px 1fr 28px;
-  }
+  display: flex;
+  gap: 14px;
+  padding: 10px 14px;
+  border-top: 1px solid ${({ theme }) => theme.border};
+  align-items: center;
 `;
 
-const BallNo = styled.div`
-  font-weight: 600;
-  color: ${({ theme }) => theme.muted};
+const BallTag = styled.div`
+  min-width: 42px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.accent};
+`;
+
+const ResultBadge = styled.div`
+  min-width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: ${({ theme, result }) => {
+    if (result === "W") return theme.wicket;
+    if (result === "4") return theme.four;
+    if (result === "6") return theme.six;
+    return theme.badgeBg;
+  }};
+
+  color: ${({ result }) =>
+    result === "4" || result === "6" || result === "W"
+      ? "#fff"
+      : "inherit"};
 `;
 
 const BallText = styled.div`
   font-size: 0.9rem;
-  color: ${({ theme }) => theme.text};
-  line-height: 1.4;
-`;
-
-const BallRuns = styled.div`
-  font-weight: 700;
-  text-align: right;
-  color: ${({ isWicket, theme }) =>
-    isWicket ? theme.wicket : theme.text};
+  line-height: 1.45;
+  color: ${({ theme, wicket }) =>
+    wicket ? theme.wicket : theme.text};
 `;
 
 /* ---------- PAGE ---------- */
@@ -134,17 +192,67 @@ const MatchDetails = () => {
   const { darkMode } = useTheme();
   const theme = darkMode ? tokens.dark : tokens.light;
 
-  const [scorecard, setScorecard] = useState(null);
-  const [commentary, setCommentary] = useState(null);
+  const [scorecard, setScorecard] = useState([]);
+  const [commentary, setCommentary] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/matches/${id}/scorecard`)
-      .then((res) => res.json())
-      .then(setScorecard);
+    const fetchData = async () => {
+      try {
+        const [scoreRes, commRes] = await Promise.all([
+          fetch(`http://localhost:8000/api/matches/${id}/scorecard`),
+          fetch(`http://localhost:8000/api/matches/${id}/commentary`),
+        ]);
 
-    fetch(`http://localhost:8000/api/matches/${id}/commentary`)
-      .then((res) => res.json())
-      .then(setCommentary);
+        const scoreData = await scoreRes.json();
+        const commData = await commRes.json();
+
+        setScorecard(scoreData.innings || []);
+
+        const rows = commData.innings || [];
+        const inningsMap = {};
+
+        rows.forEach((r) => {
+          if (!inningsMap[r.innings_id]) {
+            inningsMap[r.innings_id] = { overs: {} };
+          }
+
+          if (!inningsMap[r.innings_id].overs[r.over_number]) {
+            inningsMap[r.innings_id].overs[r.over_number] = [];
+          }
+
+          const result = r.is_wicket ? "W" : String(r.total_runs);
+
+          inningsMap[r.innings_id].overs[r.over_number].push({
+            ball: r.ball,
+            text: r.commentary,
+            isWicket: r.is_wicket,
+            result,
+          });
+        });
+
+        const structured = [];
+
+        Object.values(inningsMap).forEach((inn) => {
+          Object.entries(inn.overs)
+            .sort((a, b) => Number(b[0]) - Number(a[0]))
+            .forEach(([overNum, balls]) => {
+              structured.push({ type: "over", over: overNum });
+              [...balls].reverse().forEach((b) => {
+                structured.push({ type: "ball", ...b });
+              });
+            });
+        });
+
+        setCommentary(structured);
+      } catch (err) {
+        console.error("Match load error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
   return (
@@ -152,53 +260,76 @@ const MatchDetails = () => {
       <Header />
 
       <Container>
-        {/* MATCH HEADER */}
-        <MatchHeader>
-          <Teams theme={theme}>Match {id}</Teams>
-          <Result theme={theme}>Full scorecard & commentary</Result>
-        </MatchHeader>
+        {/* <MatchHeader theme={theme}>
+          <Teams theme={theme}>Match #{id}</Teams>
+          <MatchMeta theme={theme}>
+            Live score, scorecard & commentary
+          </MatchMeta>
+        </MatchHeader> */}
 
         {/* SCORECARD */}
-        <SectionTitle theme={theme}>Scorecard</SectionTitle>
-
-        {scorecard?.innings?.map((inn) => (
-          <InningCard key={inn.innings_id} theme={theme}>
-            <InningTitle theme={theme}>
-              {inn.batting_team}
-            </InningTitle>
-            <InningScore theme={theme}>
-              {inn.total_runs}/{inn.wickets} in {inn.overs} overs
-            </InningScore>
-          </InningCard>
-        ))}
+        <Section>
+          <SectionTitle theme={theme}>Scorecard</SectionTitle>
+          {loading ? (
+            <InningOvers theme={theme}>Loading…</InningOvers>
+          ) : (
+            scorecard.map((inn) => (
+              <InningCard key={inn.innings_id} theme={theme}>
+                <InningTop>
+                  <InningName theme={theme}>
+                    Inning {inn.innings_number} — {inn.batting_team}
+                  </InningName>
+                  <InningScore theme={theme}>
+                    {inn.total_runs}/{inn.wickets}
+                  </InningScore>
+                </InningTop>
+                <InningOvers theme={theme}>
+                  Overs: {inn.overs}
+                </InningOvers>
+              </InningCard>
+            ))
+          )}
+        </Section>
 
         {/* COMMENTARY */}
-        <SectionTitle theme={theme}>Commentary</SectionTitle>
-
-        {commentary?.innings?.map((inn) =>
-          inn.overs.map((over) => (
-            <OverBlock key={over.over}>
-              <OverTitle theme={theme}>
-                Over {over.over}
-              </OverTitle>
-
-              {over.balls.map((ball, i) => (
-                <BallRow key={i} theme={theme}>
-                  <BallNo theme={theme}>{ball.ball}</BallNo>
-                  <BallText theme={theme}>
-                    {ball.text || "No commentary"}
-                  </BallText>
-                  <BallRuns
-                    theme={theme}
-                    isWicket={ball.isWicket}
-                  >
-                    {ball.isWicket ? "W" : ball.runs}
-                  </BallRuns>
-                </BallRow>
-              ))}
-            </OverBlock>
-          ))
-        )}
+        <Section>
+          <SectionTitle theme={theme}>Commentary</SectionTitle>
+          <CommentaryBox theme={theme}>
+            {loading ? (
+              <BallRow theme={theme}>
+                <BallText theme={theme}>Loading commentary…</BallText>
+              </BallRow>
+            ) : commentary.length === 0 ? (
+              <BallRow theme={theme}>
+                <BallText theme={theme}>No commentary yet</BallText>
+              </BallRow>
+            ) : (
+              commentary.map((item, i) =>
+                item.type === "over" ? (
+                  <OverHeader key={`over-${i}`} theme={theme}>
+                    Over {item.over}
+                  </OverHeader>
+                ) : (
+                  <BallRow key={`ball-${i}`} theme={theme}>
+                    <BallTag theme={theme}>{item.ball}</BallTag>
+                    <ResultBadge
+                      theme={theme}
+                      result={item.result}
+                    >
+                      {item.result}
+                    </ResultBadge>
+                    <BallText
+                      theme={theme}
+                      wicket={item.isWicket}
+                    >
+                      {item.text}
+                    </BallText>
+                  </BallRow>
+                )
+              )
+            )}
+          </CommentaryBox>
+        </Section>
       </Container>
     </Page>
   );
