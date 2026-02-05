@@ -5,88 +5,12 @@ import MatchCarousel from "../Components/MatchCarousel";
 import MatchCarouselSkeleton from "../Components/MatchCarouselSkeleton";
 import EmptyState from "../Components/EmptyState";
 import { useTheme } from "../context/ThemeContext";
+import { use } from "react";
 
 /* ---------- MOCK MATCH DATA ---------- */
 
-const matchesData = [
-  
-  {
-    type: "ODI",
-    live: true,
-    team1: {
-      name: "England",
-      code: "ENG",
-      score: "268",
-      wickets: "6",
-      overs: "47.3",
-    },
-    team2: {
-      name: "South Africa",
-      code: "SA",
-      score: "198",
-      wickets: "5",
-      overs: "39.1",
-    },
-    status: "South Africa need 71 runs in 65 balls",
-  },
-  {
-    type: "T20 International",
-    live: true,
-    team1: {
-      name: "India",
-      code: "IND",
-      score: "154",
-      wickets: "3",
-      overs: "16.2",
-    },
-    team2: {
-      name: "New Zealand",
-      code: "NZ",
-      score: "—",
-      wickets: "—",
-      overs: "—",
-    },
-    status: "New Zealand need 42 runs in 22 balls",
-  },
-  {
-    type: "Test Match",
-    live: false,
-    team1: {
-      name: "Australia",
-      code: "AUS",
-      score: "412",
-      wickets: "9",
-      overs: "132.0",
-    },
-    team2: {
-      name: "Pakistan",
-      code: "PAK",
-      score: "311",
-      wickets: "10",
-      overs: "101.4",
-    },
-    status: "Australia lead by 101 runs",
-  },
-  {
-    type: "T20 League",
-    live: false,
-    team1: {
-      name: "Chennai Super Kings",
-      code: "CSK",
-      score: "187",
-      wickets: "5",
-      overs: "20.0",
-    },
-    team2: {
-      name: "Mumbai Indians",
-      code: "MI",
-      score: "176",
-      wickets: "8",
-      overs: "20.0",
-    },
-    status: "CSK won by 11 runs",
-  },
-];
+
+
 
 /* ---------- TOP STORIES ---------- */
 
@@ -230,8 +154,8 @@ const NewsMeta = styled.div`
 `;
 
 /* ---------- PAGE ---------- */
-
 const Home = () => {
+  const [matchesData, setMatchesData] = useState([]);
   const { darkMode } = useTheme();
   const [loading, setLoading] = useState(true);
 
@@ -239,6 +163,12 @@ const Home = () => {
     cardBg: darkMode ? "#151c2f" : "#ffffff",
     muted: darkMode ? "#9aa4b2" : "#64748b",
   };
+  useEffect(() => {
+    fetch("http://localhost:8000/api/matches/recent")
+      .then((res) => res.json())
+      .then(setMatchesData)
+      .catch(() => setMatchesData([]));
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
