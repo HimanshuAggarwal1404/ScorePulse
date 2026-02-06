@@ -6,9 +6,27 @@ SELECT
   p.bowling_style,
   p.country,
   p.is_active,
-  t.name AS team_name,
-  t.short_code AS team_code
+
+  it.name AS intl_team_name,
+  it.code AS intl_team_code,
+
+  ft.name AS franchise_name,
+  ft.code AS franchise_code
+
 FROM players p
-LEFT JOIN teams t ON t.id = p.team_id
+
+-- international team (via country)
+LEFT JOIN teams it
+  ON it.name = p.country
+ AND it.type = 'international'
+
+-- franchise mapping
+LEFT JOIN player_teams pt
+  ON pt.player_id = p.id
+
+LEFT JOIN teams ft
+  ON ft.id = pt.team_id
+ AND ft.type = 'franchise'
+
 WHERE p.is_active = true
 ORDER BY p.name;
