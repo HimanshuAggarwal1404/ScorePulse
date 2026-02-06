@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +14,7 @@ const colors = {
     textMuted: "#94a3b8",
     liveAccent: "#dc2626",
     highlight: "#2563eb",
+    winner: "#16a34a",
   },
   dark: {
     cardBg: "#151c2f",
@@ -23,8 +24,17 @@ const colors = {
     textMuted: "#9aa4b2",
     liveAccent: "#f87171",
     highlight: "#60a5fa",
+    winner: "#22c55e",
   },
 };
+
+/* ---------- ANIMATIONS ---------- */
+
+const pulse = keyframes`
+  0% { opacity: 1 }
+  50% { opacity: 0.55 }
+  100% { opacity: 1 }
+`;
 
 /* ---------- STYLED ---------- */
 
@@ -34,7 +44,6 @@ const Card = styled.div`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 14px;
   padding: 14px 16px;
-  font-family: "Inter", sans-serif;
   cursor: pointer;
 
   ${({ isLive, theme }) =>
@@ -55,7 +64,7 @@ const Card = styled.div`
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 `;
 
 const MatchType = styled.span`
@@ -76,6 +85,7 @@ const TeamRow = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 6px 0;
+  opacity: ${({ muted }) => (muted ? 0.55 : 1)};
 `;
 
 const TeamLeft = styled.div`
@@ -98,19 +108,20 @@ const Badge = styled.div`
 
 const TeamName = styled.span`
   font-size: 14px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.textPrimary};
+  font-weight: ${({ winner }) => (winner ? 800 : 600)};
+  color: ${({ theme, winner }) =>
+    winner ? theme.winner : theme.textPrimary};
 `;
 
 const ScoreBlock = styled.div`
   text-align: right;
-  min-width: 90px;
+  min-width: 110px;
 `;
 
 const Score = styled.div`
   font-size: 15px;
   font-weight: 700;
-  color: ${({ theme }) => theme.textPrimary};
+  animation: ${({ live }) => (live ? pulse : "none")} 1.4s infinite;
 `;
 
 const Overs = styled.div`
@@ -118,9 +129,18 @@ const Overs = styled.div`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+const Meta = styled.div`
+  margin-top: 8px;
+  font-size: 12px;
+  color: ${({ theme }) => theme.textSecondary};
+  display: flex;
+  justify-content: space-between;
+`;
+
 const Status = styled.div`
-  margin-top: 10px;
+  margin-top: 8px;
   font-size: 13px;
+  font-weight: 600;
   color: ${({ theme }) => theme.textSecondary};
 `;
 
@@ -131,61 +151,104 @@ const MatchCard = ({ matchData }) => {
   const theme = darkMode ? colors.dark : colors.light;
   const navigate = useNavigate();
 
-  const [score, setScore] = useState(null);
+  const [innings, setInnings] = useState([]);
 
   const isLive = matchData.status === "live";
   const isCompleted = matchData.status === "completed";
 
   useEffect(() => {
     const fetchScore = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:8000/api/matches/${matchData.id}/scorecard`
-        );
-        const data = await res.json();
-        setScore(data.innings?.[0] || null);
-      } catch {
-        setScore(null);
-      }
+      const res = await fetch(
+        `http://localhost:8000/api/matches/${matchData.id}/scorecard`
+      );
+      const data = await res.json();
+      setInnings(data.innings || []);
     };
 
     if (isLive || isCompleted) fetchScore();
   }, [matchData.id, isLive, isCompleted]);
 
+  /* ---------- DERIVED LOGIC ---------- */
+
+  let winner = null;
+  let resultText = "";
+  let target = null;
+  let rrr = null;
+
+  if (innings.length >= 1) {
+    const first = innings[0];
+    target = Number(first.total_runs) + 1;
+  }
+
+  if (innings.length === 2) {
+    const [inn1, inn2] = innings;
+    const r1 = Number(inn1.total_runs);
+    const r2 = Number(inn2.total_runs);
+
+    if (r2 > r1) {
+      winner = inn2.batting_team;
+      resultText = `${winner} won by ${10 - inn2.wickets} wickets`;
+    } else if (r1 > r2 && isCompleted) {
+      winner = inn1.batting_team;
+      resultText = `${winner} won by ${r1 - r2} runs`;
+    }
+
+    // RRR (only if live)
+    if (isLive) {
+      const ballsLeft = 6 * 6 - Math.ceil(Number(inn2.overs) * 6);
+      const runsLeft = target - r2;
+      rrr =
+        ballsLeft > 0
+          ? ((runsLeft * 6) / ballsLeft).toFixed(2)
+          : null;
+    }
+  }
+
   return (
     <Card
       theme={theme}
       isLive={isLive}
-      onClick={() => navigate(`/match/${matchData.id}`)}
+      onClick={() =>
+        navigate(`/match/${matchData.id}?scroll=latest`)
+      }
     >
       <Header>
-        <MatchType theme={theme}>{matchData.format}</MatchType>
+        <MatchType theme={theme}>
+          Match {matchData.match_number || 1} • {matchData.format}
+        </MatchType>
         {isLive && <Live theme={theme}>LIVE</Live>}
       </Header>
 
       {[matchData.team1, matchData.team2].map((team) => {
-        const isBatting =
-          score && score.batting_team === team.name;
+        const teamInn = innings.find(
+          (i) => i.batting_team === team.name
+        );
 
         return (
-          <TeamRow key={team.code}>
+          <TeamRow
+            key={team.code}
+            muted={winner && winner !== team.name}
+          >
             <TeamLeft>
               <Badge theme={theme}>{team.code}</Badge>
-              <TeamName theme={theme}>{team.name}</TeamName>
+              <TeamName
+                theme={theme}
+                winner={winner === team.name}
+              >
+                {team.name}
+              </TeamName>
             </TeamLeft>
 
             <ScoreBlock>
-              {isBatting && score ? (
+              {teamInn ? (
                 <>
-                  <Score theme={theme}>
-                    {score.total_runs}/{score.wickets}
+                  <Score live={isLive && innings[innings.length - 1] === teamInn}>
+                    {teamInn.total_runs}/{teamInn.wickets}
                   </Score>
-                  <Overs theme={theme}>{score.overs} ov</Overs>
+                  <Overs>{teamInn.overs} ov</Overs>
                 </>
-              ) : isCompleted && score ? (
-                <Score theme={theme}>Did not bat</Score>
               ) : (
-                <Overs theme={theme}>
+                <Overs>
                   {isLive ? "Yet to bat" : "Match not started"}
                 </Overs>
               )}
@@ -194,7 +257,18 @@ const MatchCard = ({ matchData }) => {
         );
       })}
 
-      <Status theme={theme}>{matchData.result || " "}</Status>
+      <Meta theme={theme}>
+        {isLive && target && (
+          <span>Target {target}</span>
+        )}
+        {isLive && rrr && (
+          <span>RRR {rrr}</span>
+        )}
+      </Meta>
+
+      <Status theme={theme}>
+        {resultText || matchData.result || " "}
+      </Status>
     </Card>
   );
 };

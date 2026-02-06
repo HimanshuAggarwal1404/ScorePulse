@@ -13,7 +13,7 @@ import PointsTable from "./Pages/PointsTable";
 import ErrorPage from "./Pages/ErrorPage";
 import NetworkBanner from "./Components/NetworkBanner";
 import MatchDetails from "./Pages/MatchDetails";
-
+import TeamDetails from "./Pages/TeamDetails";
 /* ---------- Components ---------- */
 
 import EntryAnimation from "./Components/EntryAnimation";
@@ -57,8 +57,8 @@ const App = () => {
         <Route path="/tournaments" element={<Tournaments />} />
         <Route path="/tournament/:id" element={<PointsTable />} />
         <Route path="/tournament/:id/points" element={<PointsTable />} />
-        <Route path="/match/:id" element={<MatchDetails />} />
-
+        <Route path="/match/:id" element={<MatchDetails />} />\
+        <Route path="/teams/:teamId" element={<TeamDetails />} />
 
         {/* 404 */}
         <Route path="*" element={<ErrorPage />} />
