@@ -1,149 +1,148 @@
 # ScorePulse 🏏
 
-**ScorePulse** is a full-stack cricket scoring and match analytics platform inspired by products like Cricbuzz and ESPNcricinfo, but built from the ground up with a strong focus on **data modelling, live match simulation, and clean system design**.
+**ScorePulse** is a full-stack cricket scoring and match analytics platform built with a strong emphasis on **data modelling, system design, and correctness**.
 
-The project demonstrates end-to-end ownership of a production-style application — from relational database design and backend APIs to a modern, responsive frontend.
+Inspired by platforms like Cricbuzz and ESPNcricinfo, the goal of this project is not UI mimicry, but to model how **real cricket data flows through a production system** — from ball-by-ball events in a relational database to live-updating scorecards and commentary on the frontend.
 
 ---
 
-## ✨ Key Features
+## ✨ Core Features
 
-### 🏟️ Match Engine
-- Ball-by-ball match simulation (overs, wickets, extras)
+### 🏟️ Match & Scoring Engine
+- Ball-by-ball match simulation
 - Multi-innings match support
-- Automatic score calculation (runs, wickets, overs)
-- Match state handling: **upcoming, live, completed**
-- Result computation and display
+- Automatic computation of:
+  - Runs
+  - Wickets
+  - Overs (e.g. `5.6`)
+- Match lifecycle handling:
+  - `upcoming`
+  - `live`
+  - `completed`
+- Match result calculation and display
 
 ### 📝 Live Commentary
-- Cricbuzz-style commentary feed
-- Over-wise grouping with latest balls shown first
+- Commentary stored at **ball level**
+- Over-wise grouping
+- Latest deliveries shown first (like Cricbuzz)
 - Visual highlights for:
   - **Wickets**
   - **Fours**
   - **Sixes**
-- Commentary generated and stored per delivery (ball level)
+- Commentary text designed to feel realistic and contextual
 
 ### 📊 Scorecards
-- Dynamic scorecards per innings
-- Real-time run/wicket aggregation from ball data
-- Accurate overs tracking (e.g. `5.6`)
+- Dynamically derived from ball data (no redundant storage)
+- Accurate innings summaries
 - Batting team identification
+- Supports partial and completed innings
 
 ### 🧑‍🤝‍🧑 Teams & Squads
-- Fully relational team & player system
+- Fully relational team–player model
 - Supports:
   - International teams
   - IPL franchises
 - IPL 2026 squads populated using real players
-- Players can belong to multiple teams historically
-- Dedicated **Teams page** with dynamic SQL-backed data
-- Clickable teams → detailed squad views
+- Players can belong to multiple teams across seasons
+- Dedicated Teams page with:
+  - Dynamic SQL-backed data
+  - Team → Squad navigation
 
 ### 🔄 Auto-Refresh
 - Match cards auto-refresh during live matches
-- Match details page auto-updates commentary and scores
-- Polling-based refresh (backend-agnostic, scalable)
+- Match details page auto-updates:
+  - Scorecard
+  - Commentary
+- Polling-based refresh (simple, predictable, backend-agnostic)
 
 ---
 
-## 🧠 Technical Highlights
+## 🧱 Architecture & Tech Stack
 
-### Database Design (PostgreSQL)
-- Normalized relational schema
-- Key tables:
-  - `teams`
-  - `players`
-  - `player_teams`
-  - `matches`
-  - `innings`
-  - `balls`
-- Strong use of:
+ScorePulse is designed as a **backend-first, API-driven application** with a clear separation of concerns.
+
+### Backend
+- **Node.js** + **Express**
+- **PostgreSQL** as the primary datastore
+- Raw **SQL queries** used intentionally for:
+  - Precise joins and aggregations
+  - Reliable score computation
+  - Clear ownership of business logic
+- Strong relational design with:
   - Foreign keys
-  - Enums (match format, wicket types)
+  - Enum constraints
   - Sequence-safe inserts
-- Designed for **historical data + future seasons**
 
-### Backend (Node.js + Express)
-- RESTful API design
-- Query-driven logic (SQL as source of truth)
-- Separation of concerns:
-  - Controllers
-  - SQL query files
-- Endpoints for:
-  - Match lists
-  - Scorecards
-  - Ball-by-ball commentary
-  - Teams and squads
+**Backend responsibilities**
+- Match lifecycle management
+- Score aggregation from ball data
+- Commentary retrieval and ordering
+- Team and squad data management
 
-### Frontend (React)
-- Modern React with hooks
-- Styled-Components for theme-safe UI
-- Dark / Light theme support
-- Clean component structure:
-  - Match cards
-  - Match details page
-  - Teams & squad pages
+---
+
+### Frontend
+- **React** (hooks-based)
+- **Styled-Components** for scoped, theme-aware styling
+- Light / Dark theme support
 - UI patterns inspired by professional sports platforms
 
+**Frontend responsibilities**
+- Match listing & live match cards
+- Detailed match view (scorecard + commentary)
+- Teams & squad exploration
+- Clear visual hierarchy for live data
+
 ---
 
-## 🗂️ Project Structure (High Level)
-backend/
-├── src/
-│ ├── controllers/
-│ ├── queries/
-│ ├── routes/
-│ └── db/
-└── server.js
+## 🧠 Data Model Philosophy
 
-frontend/
-├── src/
-│ ├── Pages/
-│ ├── Components/
-│ ├── context/
-│ └── styles/
+- **Balls are the source of truth**
+- Scores, overs, and wickets are always **derived**
+- No redundant or denormalized score storage
+- Designed to support:
+  - Multiple leagues
+  - Future seasons
+  - Historical match data
+- Schema prioritizes correctness over convenience
 
 ---
 
 ## 🧪 Data Integrity & Reliability
 
-- Sequence-safe inserts (no hard-coded IDs)
-- Conflict-safe seeding for players & teams
-- Referential integrity enforced at DB level
+- Strict foreign-key enforcement
+- Enum-based domain validation
+- Conflict-safe and sequence-safe inserts
 - Designed to handle:
   - Partial innings
-  - Completed matches
-  - Multi-season expansion
+  - Live matches
+  - Completed matches without data loss
 
 ---
 
 ## 🚀 Why This Project
 
-ScorePulse was built to explore **real-world system design problems**:
+ScorePulse was built to explore **real system-design problems**, not just UI rendering:
 - Modelling live sports data
 - Designing schemas that scale across seasons
-- Handling constantly updating data on the frontend
 - Keeping business logic close to the database
+- Ensuring frontend state reflects backend truth
 
-The emphasis is not just on UI, but on **correctness, structure, and extensibility**.
+The project reflects a **production-oriented mindset**, with emphasis on structure, clarity, and extensibility.
 
 ---
 
-## 📌 Possible Extensions
-- Player statistics & career records
-- Auction / transfer history
+## 📌 Potential Extensions
+- Player statistics & career summaries
+- Auction and transfer history
 - Playing XI selection
 - WebSocket-based live updates
-- Admin match simulator panel
+- Admin-side match simulation tools
 
 ---
 
-## 🧑‍💻 Author
+## 👤 Author
 
-Built and maintained by **Himanshu Aggarwal**  
-A full-stack project showcasing backend-first thinking with a polished frontend.
+Built and maintained by **Himanshu Aggarwal**.
 
----
-
-> This project is actively evolving and designed to grow with additional formats, leagues, and analytics features.
+>ScorePulse is an evolving project intended to grow with additional formats, leagues, and analytics features.
