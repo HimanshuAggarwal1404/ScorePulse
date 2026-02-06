@@ -48,12 +48,7 @@ Inspired by platforms like Cricbuzz and ESPNcricinfo, the goal of this project i
   - Dynamic SQL-backed data
   - Team → Squad navigation
 
-### 🔄 Auto-Refresh
-- Match cards auto-refresh during live matches
-- Match details page auto-updates:
-  - Scorecard
-  - Commentary
-- Polling-based refresh (simple, predictable, backend-agnostic)
+
 
 ---
 
