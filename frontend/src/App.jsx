@@ -14,6 +14,7 @@ import ErrorPage from "./Pages/ErrorPage";
 import NetworkBanner from "./Components/NetworkBanner";
 import MatchDetails from "./Pages/MatchDetails";
 import TeamDetails from "./Pages/TeamDetails";
+import PlayerProfile from "./Pages/PlayerProfile";
 /* ---------- Components ---------- */
 
 import EntryAnimation from "./Components/EntryAnimation";
@@ -50,6 +51,7 @@ const App = () => {
         {/* Core Pages */}
         <Route path="/teams" element={<Teams />} />
         <Route path="/players" element={<Players />} />
+        <Route path="/players/:id" element={<PlayerProfile />} />
         <Route path="/rankings" element={<Rankings />} />
         <Route path="/fixtures" element={<Fixtures />} />
 

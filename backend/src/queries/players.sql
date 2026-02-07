@@ -1,32 +1,44 @@
+-- get_all_players
 SELECT
-  p.id,
-  p.name,
-  p.role,
-  p.batting_style,
-  p.bowling_style,
-  p.country,
-  p.is_active,
+  id,
+  name,
+  nationality,
+  franchise
+FROM players_stats
+ORDER BY name ASC;
 
-  it.name AS intl_team_name,
-  it.code AS intl_team_code,
+-- get_player_basic
+SELECT
+  id,
+  name,
+  nationality,
+  franchise
+FROM players_stats
+WHERE id = $1;
 
-  ft.name AS franchise_name,
-  ft.code AS franchise_code
+-- batting_odi
+SELECT * FROM batting_odi WHERE player_id = $1;
 
-FROM players p
+-- batting_t20
+SELECT * FROM batting_t20 WHERE player_id = $1;
 
--- international team (via country)
-LEFT JOIN teams it
-  ON it.name = p.country
- AND it.type = 'international'
+-- batting_test
+SELECT * FROM batting_test WHERE player_id = $1;
 
--- franchise mapping
-LEFT JOIN player_teams pt
-  ON pt.player_id = p.id
+-- bowling_odi
+SELECT * FROM bowling_odi WHERE player_id = $1;
 
-LEFT JOIN teams ft
-  ON ft.id = pt.team_id
- AND ft.type = 'franchise'
+-- bowling_t20
+SELECT * FROM bowling_t20 WHERE player_id = $1;
 
-WHERE p.is_active = true
-ORDER BY p.name;
+-- bowling_test
+SELECT * FROM bowling_test WHERE player_id = $1;
+
+-- fielding_odi
+SELECT * FROM fielding_odi WHERE player_id = $1;
+
+-- fielding_t20
+SELECT * FROM fielding_t20 WHERE player_id = $1;
+
+-- fielding_test
+SELECT * FROM fielding_test WHERE player_id = $1;
