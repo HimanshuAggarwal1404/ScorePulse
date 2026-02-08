@@ -2,48 +2,37 @@ import db from "../db/index.js";
 import fs from "fs";
 import path from "path";
 
-/* ---------- SQL FILES ---------- */
-
 const recentMatchesSQL = fs.readFileSync(
   path.resolve("src/queries/recent_matches.sql"),
   "utf-8"
 );
-
 const scorecardSQL = fs.readFileSync(
   path.resolve("src/queries/scorecard.sql"),
   "utf-8"
 );
-
-const commentarySQL = fs.readFileSync(
-  path.resolve("src/queries/commentary.sql"),
-  "utf-8"
-);
-
-/* ---------- CONTROLLERS ---------- */
-
 export const getRecentMatches = async (req, res) => {
   try {
     const { rows } = await db.query(recentMatchesSQL);
 
     const formatted = rows.map((m) => ({
       id: m.id,
-      type: m.format,
-      live: !m.status?.toLowerCase().includes("won"),
+      format: m.type,
+      status: "completed", // or derive later
+      date: m.date,
+
       team1: {
-        name: m.team1_name,
-        code: m.team1_code,
-        score: "—",
-        wickets: "—",
-        overs: "—",
+        name: m.teams?.[0],
+        code: m.teams?.[0]
+          ? m.teams[0].split(" ").map(w => w[0]).join("").slice(0, 3).toUpperCase()
+          : "T1",
       },
+
       team2: {
-        name: m.team2_name,
-        code: m.team2_code,
-        score: "—",
-        wickets: "—",
-        overs: "—",
+        name: m.teams?.[1],
+        code: m.teams?.[1]
+          ? m.teams[1].split(" ").map(w => w[0]).join("").slice(0, 3).toUpperCase()
+          : "T2",
       },
-      status: m.status,
     }));
 
     res.json(formatted);
@@ -55,22 +44,20 @@ export const getRecentMatches = async (req, res) => {
 
 export const getMatchScorecard = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { rows } = await db.query(scorecardSQL, [id]);
-    res.json({ matchId: id, innings: rows });
-  } catch (err) {
-    console.error("Scorecard error:", err);
-    res.status(500).json({ error: "Failed to fetch scorecard" });
-  }
-};
+    const { matchId } = req.params;
 
-export const getMatchCommentary = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { rows } = await db.query(commentarySQL, [id]);
-    res.json({ matchId: id, innings: rows });
+    const { rows } = await db.query(scorecardSQL, [matchId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Scorecard not found" });
+    }
+
+    res.json({
+      matchId,
+      scorecard: rows
+    });
   } catch (err) {
-    console.error("Commentary error:", err);
-    res.status(500).json({ error: "Failed to fetch commentary" });
+    console.error("Scorecard fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch scorecard" });
   }
 };

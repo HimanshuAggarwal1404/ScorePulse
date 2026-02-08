@@ -28,7 +28,7 @@ const colors = {
   },
 };
 
-/* ---------- ANIMATIONS ---------- */
+/* ---------- ANIMATION ---------- */
 
 const pulse = keyframes`
   0% { opacity: 1 }
@@ -45,20 +45,6 @@ const Card = styled.div`
   border-radius: 14px;
   padding: 14px 16px;
   cursor: pointer;
-
-  ${({ isLive, theme }) =>
-    isLive &&
-    `
-    &::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: ${theme.liveAccent};
-    }
-  `}
 `;
 
 const Header = styled.div`
@@ -70,52 +56,23 @@ const Header = styled.div`
 const MatchType = styled.span`
   font-size: 12px;
   font-weight: 600;
-  color: ${({ theme }) => theme.textSecondary};
   text-transform: uppercase;
 `;
 
 const Live = styled.span`
   font-size: 11px;
   font-weight: 800;
-  color: ${({ theme }) => theme.liveAccent};
 `;
 
 const TeamRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 6px 0;
-  opacity: ${({ muted }) => (muted ? 0.55 : 1)};
-`;
-
-const TeamLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Badge = styled.div`
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.border};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
 `;
 
 const TeamName = styled.span`
   font-size: 14px;
-  font-weight: ${({ winner }) => (winner ? 800 : 600)};
-  color: ${({ theme, winner }) =>
-    winner ? theme.winner : theme.textPrimary};
-`;
-
-const ScoreBlock = styled.div`
-  text-align: right;
-  min-width: 110px;
+  font-weight: 600;
 `;
 
 const Score = styled.div`
@@ -126,22 +83,6 @@ const Score = styled.div`
 
 const Overs = styled.div`
   font-size: 11px;
-  color: ${({ theme }) => theme.textMuted};
-`;
-
-const Meta = styled.div`
-  margin-top: 8px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.textSecondary};
-  display: flex;
-  justify-content: space-between;
-`;
-
-const Status = styled.div`
-  margin-top: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.textSecondary};
 `;
 
 /* ---------- COMPONENT ---------- */
@@ -151,124 +92,79 @@ const MatchCard = ({ matchData }) => {
   const theme = darkMode ? colors.dark : colors.light;
   const navigate = useNavigate();
 
-  const [innings, setInnings] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
 
-  const isLive = matchData.status === "live";
-  const isCompleted = matchData.status === "completed";
+  const isLive = matchData?.live === true;
 
   useEffect(() => {
-    const fetchScore = async () => {
-      const res = await fetch(
-        `http://localhost:8000/api/matches/${matchData.id}/scorecard`
-      );
-      const data = await res.json();
-      setInnings(data.innings || []);
-    };
+    if (!matchData?.id) return;
 
-    if (isLive || isCompleted) fetchScore();
-  }, [matchData.id, isLive, isCompleted]);
+    fetch(`http://localhost:8000/api/matches/recent`)
+      .then((res) => res.json())
+      .then((data) => {
+        setDeliveries(Array.isArray(data.scorecard) ? data.scorecard : []);
+      })
+      .catch(() => setDeliveries([]));
+  }, [matchData?.id]);
 
-  /* ---------- DERIVED LOGIC ---------- */
+  /* ---------- AGGREGATE DELIVERIES ---------- */
 
-  let winner = null;
-  let resultText = "";
-  let target = null;
-  let rrr = null;
+  const inningsMap = {};
 
-  if (innings.length >= 1) {
-    const first = innings[0];
-    target = Number(first.total_runs) + 1;
-  }
-
-  if (innings.length === 2) {
-    const [inn1, inn2] = innings;
-    const r1 = Number(inn1.total_runs);
-    const r2 = Number(inn2.total_runs);
-
-    if (r2 > r1) {
-      winner = inn2.batting_team;
-      resultText = `${winner} won by ${10 - inn2.wickets} wickets`;
-    } else if (r1 > r2 && isCompleted) {
-      winner = inn1.batting_team;
-      resultText = `${winner} won by ${r1 - r2} runs`;
+  deliveries.forEach((d) => {
+    if (!inningsMap[d.innings_id]) {
+      inningsMap[d.innings_id] = {
+        batting_team: d.batting_team,
+        runs: 0,
+        wickets: 0,
+        balls: 0,
+      };
     }
 
-    // RRR (only if live)
-    if (isLive) {
-      const ballsLeft = 6 * 6 - Math.ceil(Number(inn2.overs) * 6);
-      const runsLeft = target - r2;
-      rrr =
-        ballsLeft > 0
-          ? ((runsLeft * 6) / ballsLeft).toFixed(2)
-          : null;
-    }
-  }
+    inningsMap[d.innings_id].runs += d.runs_total || 0;
+    inningsMap[d.innings_id].balls += 1;
+    if (d.player_out) inningsMap[d.innings_id].wickets += 1;
+  });
+
+  const innings = Object.values(inningsMap);
+
+  /* ---------- 🔑 FIX IS HERE ---------- */
+  const teams = [matchData?.team1, matchData?.team2].filter(
+    (t) => t && t.name
+  );
 
   return (
     <Card
       theme={theme}
-      isLive={isLive}
-      onClick={() =>
-        navigate(`/match/${matchData.id}?scroll=latest`)
-      }
+      onClick={() => navigate(`/match/${matchData.id}`)}
     >
       <Header>
-        <MatchType theme={theme}>
-          Match {matchData.match_number || 1} • {matchData.format}
-        </MatchType>
-        {isLive && <Live theme={theme}>LIVE</Live>}
+        <MatchType>{matchData?.format}</MatchType>
+        {isLive && <Live>LIVE</Live>}
       </Header>
 
-      {[matchData.team1, matchData.team2].map((team) => {
-        const teamInn = innings.find(
+      {teams.map((team, idx) => {
+        const inn = innings.find(
           (i) => i.batting_team === team.name
         );
 
         return (
-          <TeamRow
-            key={team.code}
-            muted={winner && winner !== team.name}
-          >
-            <TeamLeft>
-              <Badge theme={theme}>{team.code}</Badge>
-              <TeamName
-                theme={theme}
-                winner={winner === team.name}
-              >
-                {team.name}
-              </TeamName>
-            </TeamLeft>
+          <TeamRow key={idx}>
+            <TeamName>{team.name}</TeamName>
 
-            <ScoreBlock>
-              {teamInn ? (
-                <>
-                  <Score live={isLive && innings[innings.length - 1] === teamInn}>
-                    {teamInn.total_runs}/{teamInn.wickets}
-                  </Score>
-                  <Overs>{teamInn.overs} ov</Overs>
-                </>
-              ) : (
-                <Overs>
-                  {isLive ? "Yet to bat" : "Match not started"}
-                </Overs>
-              )}
-            </ScoreBlock>
+            {inn ? (
+              <div>
+                <Score live={isLive}>
+                  {inn.runs}/{inn.wickets}
+                </Score>
+                <Overs>{(inn.balls / 6).toFixed(1)} ov</Overs>
+              </div>
+            ) : (
+              <Overs>Yet to bat</Overs>
+            )}
           </TeamRow>
         );
       })}
-
-      <Meta theme={theme}>
-        {isLive && target && (
-          <span>Target {target}</span>
-        )}
-        {isLive && rrr && (
-          <span>RRR {rrr}</span>
-        )}
-      </Meta>
-
-      <Status theme={theme}>
-        {resultText || matchData.result || " "}
-      </Status>
     </Card>
   );
 };
