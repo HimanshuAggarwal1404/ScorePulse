@@ -1,149 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useSearchParams } from "react-router-dom";
 import Header from "../Components/Header";
-import { useTheme } from "../context/ThemeContext";
+import EmptyState from "../Components/EmptyState";
+import { Container, DataTable, Glass, Page, PageHeader, Segmented, StickyBar, TableScroll } from "../ui/kit";
 
-/* ---------- THEME ---------- */
+/* ---------- STYLES ---------- */
 
-const tokens = {
-  light: {
-    bg: "#f6f7f9",
-    card: "#ffffff",
-    border: "#e5e7eb",
-    text: "#0f172a",
-    muted: "#64748b",
-    accent: "#2563eb",
-    up: "#16a34a",
-    down: "#dc2626",
-    hover: "#f1f5f9",
-    stickyBg: "#f6f7f9",
-    shadow: "0 4px 12px rgba(0,0,0,0.06)",
-  },
-  dark: {
-    bg: "#0b1220",
-    card: "#151c2f",
-    border: "#24304a",
-    text: "#f5f7fa",
-    muted: "#9aa4b2",
-    accent: "#60a5fa",
-    up: "#4ade80",
-    down: "#f87171",
-    hover: "#1e293b",
-    stickyBg: "#0b1220",
-    shadow: "0 4px 12px rgba(0,0,0,0.35)",
-  },
-};
-
-/* ---------- PAGE ---------- */
-
-const Page = styled.div`
-  min-height: 100vh;
-  background: ${({ theme }) => theme.bg};
-  font-family: "Inter", sans-serif;
-`;
-
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 16px;
-`;
-
-const Title = styled.h1`
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 16px;
-`;
-
-/* ---------- STICKY TABS WRAPPER ---------- */
-
-const StickyTabs = styled.div`
-  position: sticky;
-  top: 64px; /* header height */
-  z-index: 50;
-
-  background: ${({ theme }) => theme.stickyBg};
-  padding-top: 12px;
-  padding-bottom: 12px;
-
-  box-shadow: ${({ stuck, theme }) =>
-    stuck ? theme.shadow : "none"};
-  transition: box-shadow 0.2s ease;
-`;
-
-/* ---------- TABS ---------- */
-
-const Tabs = styled.div`
+const Filters = styled.div`
   display: flex;
-  gap: 12px;
-  margin-bottom: ${({ noMargin }) => (noMargin ? "0" : "12px")};
+  gap: 0.6rem;
   flex-wrap: wrap;
 `;
 
-const Tab = styled.button`
-  background: ${({ active, theme }) =>
-    active ? theme.accent : "transparent"};
-  color: ${({ active, theme }) =>
-    active ? "#fff" : theme.text};
-
-  border: 1px solid ${({ theme }) => theme.border};
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-
-  &:hover {
-    background: ${({ active, theme }) =>
-      active ? theme.accent : theme.hover};
-  }
+const Rank = styled.span`
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  background: ${({ $top }) => ($top ? "var(--accent)" : "var(--solid-2)")};
+  color: ${({ $top }) => ($top ? "var(--accent-ink)" : "var(--text)")};
+  box-shadow: ${({ $top }) => ($top ? "var(--glow)" : "none")};
 `;
-
-/* ---------- TABLE ---------- */
-
-const Card = styled.div`
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 16px;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const Th = styled.th`
-  text-align: left;
-  padding: 12px;
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.muted};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-`;
-
-const Td = styled.td`
-  padding: 12px;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  color: ${({ theme }) => theme.text};
-  font-weight: 500;
-`;
-
-const Tr = styled.tr`
-  &:hover {
-    background: ${({ theme }) => theme.hover};
-  }
-`;
-
-/* ---------- CHANGE INDICATOR ---------- */
 
 const Change = styled.span`
   font-weight: 700;
-  color: ${({ type, theme }) =>
-    type === "up"
-      ? theme.up
-      : type === "down"
-      ? theme.down
-      : theme.muted};
+  color: ${({ $type }) => ($type === "up" ? "var(--win)" : $type === "down" ? "var(--live)" : "var(--muted)")};
+`;
+
+const Name = styled.span`
+  font-weight: 650;
+  letter-spacing: -0.01em;
 `;
 
 /* ---------- MOCK DATA ---------- */
@@ -169,119 +59,76 @@ const mockRankings = {
 /* ---------- HELPERS ---------- */
 
 const getChange = (rank, prevRank) => {
-  if (prevRank > rank) return { symbol: "↑", type: "up" };
-  if (prevRank < rank) return { symbol: "↓", type: "down" };
-  return { symbol: "—", type: "same" };
+  if (prevRank > rank) return { symbol: "▲", type: "up", label: "Up" };
+  if (prevRank < rank) return { symbol: "▼", type: "down", label: "Down" };
+  return { symbol: "—", type: "same", label: "No change" };
 };
+
+const CATEGORIES = ["Team", "Batsman", "Bowler", "All-rounder"].map((c) => ({ key: c, label: c === "Batsman" ? "Batters" : c === "Bowler" ? "Bowlers" : c === "All-rounder" ? "All-rounders" : "Teams" }));
+const FORMATS = ["Test", "ODI", "T20"].map((f) => ({ key: f, label: f }));
 
 /* ---------- PAGE ---------- */
 
 const Rankings = () => {
-  const { darkMode } = useTheme();
-  const theme = darkMode ? tokens.dark : tokens.light;
-
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.get("category") || "Team";
   const format = searchParams.get("format") || "Test";
-
-  const [rows, setRows] = useState([]);
-  const [stuck, setStuck] = useState(false);
-
-  /* Detect stickiness (no scroll listener) */
-  const stickyRef = React.useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([e]) => setStuck(!e.isIntersecting),
-      { threshold: [1] }
-    );
-
-    if (stickyRef.current) observer.observe(stickyRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const data = mockRankings[category]?.[format] || [];
-    setRows(data);
-  }, [category, format]);
+  const rows = mockRankings[category]?.[format] || [];
 
   return (
-    <Page theme={theme}>
+    <Page>
       <Header />
 
-      <Container>
-        <Title theme={theme}>Standings</Title>
+      <Container $max="1000px">
+        <PageHeader eyebrow="Rankings" title="Standings" subtitle="Team and player rankings by format." />
 
-        {/* Sentinel for sticky detection */}
-        <div ref={stickyRef} />
+        <StickyBar>
+          <Filters>
+            <Segmented items={CATEGORIES} value={category} onChange={(c) => setSearchParams({ category: c, format })} ariaLabel="Ranking type" />
+            <Segmented items={FORMATS} value={format} onChange={(f) => setSearchParams({ category, format: f })} ariaLabel="Format" />
+          </Filters>
+        </StickyBar>
 
-        {/* STICKY FILTERS */}
-        <StickyTabs theme={theme} stuck={stuck}>
-          <Tabs>
-            {["Team", "Batsman", "Bowler", "All-rounder"].map((c) => (
-              <Tab
-                key={c}
-                theme={theme}
-                active={category === c}
-                onClick={() =>
-                  setSearchParams({ category: c, format })
-                }
-              >
-                {c}
-              </Tab>
-            ))}
-          </Tabs>
-
-          <Tabs noMargin>
-            {["Test", "ODI", "T20"].map((f) => (
-              <Tab
-                key={f}
-                theme={theme}
-                active={format === f}
-                onClick={() =>
-                  setSearchParams({ category, format: f })
-                }
-              >
-                {f}
-              </Tab>
-            ))}
-          </Tabs>
-        </StickyTabs>
-
-        {/* TABLE */}
-        <Card theme={theme}>
-          <Table>
-            <thead>
-              <tr>
-                <Th theme={theme}>Rank</Th>
-                <Th theme={theme}>Change</Th>
-                <Th theme={theme}>
-                  {category === "Team" ? "Team" : "Player"}
-                </Th>
-                <Th theme={theme}>Rating</Th>
-                <Th theme={theme}>Points</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const change = getChange(row.rank, row.prevRank);
-                return (
-                  <Tr key={row.rank} theme={theme}>
-                    <Td theme={theme}>{row.rank}</Td>
-                    <Td theme={theme}>
-                      <Change type={change.type} theme={theme}>
-                        {change.symbol}
-                      </Change>
-                    </Td>
-                    <Td theme={theme}>{row.name}</Td>
-                    <Td theme={theme}>{row.rating}</Td>
-                    <Td theme={theme}>{row.points}</Td>
-                  </Tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        </Card>
+        {rows.length === 0 ? (
+          <EmptyState icon="📊" title="Rankings coming soon" text={`${CATEGORIES.find((c) => c.key === category).label} rankings for ${format} aren't available yet.`} />
+        ) : (
+          <Glass $pad="0.5rem 0.75rem">
+            <TableScroll>
+              <DataTable>
+                <thead>
+                  <tr>
+                    <th>{category === "Team" ? "Team" : "Player"}</th>
+                    <th>Change</th>
+                    <th>Rating</th>
+                    <th>Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => {
+                    const change = getChange(row.rank, row.prevRank);
+                    return (
+                      <tr key={row.rank}>
+                        <td>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.75rem" }}>
+                            <Rank $top={row.rank === 1}>{row.rank}</Rank>
+                            <Name>{row.name}</Name>
+                          </span>
+                        </td>
+                        <td>
+                          <Change $type={change.type} aria-label={change.label}>
+                            {change.symbol}
+                          </Change>
+                        </td>
+                        <td style={{ fontWeight: 700 }}>{row.rating}</td>
+                        <td>{row.points.toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </DataTable>
+            </TableScroll>
+          </Glass>
+        )}
       </Container>
     </Page>
   );

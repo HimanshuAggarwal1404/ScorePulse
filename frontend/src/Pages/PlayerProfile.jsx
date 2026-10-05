@@ -2,176 +2,208 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../Components/Header";
-import { useTheme } from "../context/ThemeContext";
-
-/* ---------- THEME ---------- */
-
-const tokens = {
-  light: {
-    bg: "#f6f7f9",
-    card: "#ffffff",
-    border: "#e5e7eb",
-    text: "#0f172a",
-    muted: "#64748b",
-    header: "#f1f5f9",
-  },
-  dark: {
-    bg: "#0b1220",
-    card: "#151c2f",
-    border: "#24304a",
-    text: "#f5f7fa",
-    muted: "#9aa4b2",
-    header: "#1e293b",
-  },
-};
+import EmptyState from "../Components/EmptyState";
+import { apiGet } from "../api";
+import { Avatar, ButtonLink, Container, DataTable, Eyebrow, Glass, Page, Segmented, Skeleton, TableScroll, Title } from "../ui/kit";
+import { initials } from "../ui/styles";
 
 /* ---------- LAYOUT ---------- */
 
-const Page = styled.div`
-  min-height: 100vh;
-  background: ${({ theme }) => theme.bg};
-  font-family: "Inter", sans-serif;
+const Hero = styled(Glass)`
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -50% -10% auto auto;
+    width: 50%;
+    height: 200%;
+    background: radial-gradient(closest-side, var(--accent-soft), transparent);
+    pointer-events: none;
+  }
 `;
 
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 16px;
+const Highlights = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 `;
 
-const Card = styled.div`
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 28px;
+const Stat = styled(Glass)`
+  padding: 1rem 1.1rem;
+
+  .label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .value {
+    margin-top: 0.3rem;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 750;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .sub {
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
 `;
 
-/* ---------- HEADER ---------- */
+const Panel = styled(Glass)`
+  padding: 1.1rem 1.1rem 0.6rem;
+  margin-bottom: 1.25rem;
+`;
 
-const Name = styled.h1`
-  font-size: 2.1rem;
+const PanelTitle = styled.h2`
+  font-size: 1.05rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.text};
-`;
-
-const Meta = styled.div`
-  margin-top: 6px;
-  font-size: 0.95rem;
-  color: ${({ theme }) => theme.muted};
-`;
-
-/* ---------- TABLE ---------- */
-
-const TableWrapper = styled.div`
-  overflow-x: auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 520px;
-
-  th {
-    background: ${({ theme }) => theme.header};
-    font-weight: 600;
-    text-align: left;
-    padding: 10px;
-    font-size: 0.85rem;
-    border-bottom: 1px solid ${({ theme }) => theme.border};
-    color: ${({ theme }) => theme.text};
-  }
-
-  td {
-    padding: 10px;
-    font-size: 0.9rem;
-    border-bottom: 1px solid ${({ theme }) => theme.border};
-    color: ${({ theme }) => theme.text};
-  }
-
-  tr:last-child td {
-    border-bottom: none;
-  }
-`;
-
-const SectionTitle = styled.h3`
-  font-size: 1.2rem;
-  margin-bottom: 14px;
-  color: ${({ theme }) => theme.text};
+  letter-spacing: -0.012em;
+  margin-bottom: 0.6rem;
 `;
 
 /* ---------- HELPERS ---------- */
 
-const statLabel = (k) =>
-  k
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-
-const renderStatRow = (label, test, odi, t20) => (
-  <tr>
-    <td>{label}</td>
-    <td>{test ?? "—"}</td>
-    <td>{odi ?? "—"}</td>
-    <td>{t20 ?? "—"}</td>
-  </tr>
-);
+const statLabel = (k) => k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 const buildRows = (test, odi, t20, ignore = []) => {
   if (!test && !odi && !t20) return null;
-
-  const keys = new Set([
-    ...Object.keys(test || {}),
-    ...Object.keys(odi || {}),
-    ...Object.keys(t20 || {}),
-  ]);
-
+  const keys = new Set([...Object.keys(test || {}), ...Object.keys(odi || {}), ...Object.keys(t20 || {})]);
   return [...keys]
     .filter((k) => !["id", "player_id", "span", ...ignore].includes(k))
-    .map((k) =>
-      renderStatRow(
-        statLabel(k),
-        test?.[k],
-        odi?.[k],
-        t20?.[k]
-      )
-    );
+    .map((k) => (
+      <tr key={k}>
+        <td>{statLabel(k)}</td>
+        <td>{test?.[k] ?? "—"}</td>
+        <td>{odi?.[k] ?? "—"}</td>
+        <td>{t20?.[k] ?? "—"}</td>
+      </tr>
+    ));
 };
+
+// earliest start and latest end across every format, e.g. "1989-2013"
+const careerSpan = (...groups) => {
+  const years = groups
+    .flatMap((g) => ["test", "odi", "t20"].map((f) => g?.[f]?.span))
+    .flatMap((s) => String(s).match(/\d{4}/g) || [])
+    .map(Number);
+  if (!years.length) return null;
+  const from = Math.min(...years);
+  const to = Math.max(...years);
+  return from === to ? `${from}` : `${from}-${to}`;
+};
+const sum = (rows, key) =>
+  ["test", "odi", "t20"].reduce((s, f) => {
+    const v = Number(rows?.[f]?.[key]);
+    return Number.isFinite(v) ? s + v : s;
+  }, 0);
+
+const SECTIONS = [
+  { key: "batting", label: "Batting" },
+  { key: "bowling", label: "Bowling" },
+  { key: "fielding", label: "Fielding" },
+];
 
 /* ---------- PAGE ---------- */
 
 const PlayerProfile = () => {
   const { id } = useParams();
-  const { darkMode } = useTheme();
-  const theme = darkMode ? tokens.dark : tokens.light;
-
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [section, setSection] = useState("batting");
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/players/${id}`)
-      .then((res) => res.json())
+    apiGet(`/players/${id}`)
       .then(setData)
-      .catch(console.error);
+      .catch(setError);
   }, [id]);
 
-  if (!data) return null;
+  if (error) {
+    return (
+      <Page>
+        <Header />
+        <Container $max="1000px">
+          <EmptyState icon="🧢" title="Player not found" text="We couldn't find this player." actionLabel="All players" actionTo="/players" />
+        </Container>
+      </Page>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Page>
+        <Header />
+        <Container $max="1000px">
+          <Skeleton $h="120px" $r="22px" />
+          <div style={{ height: 16 }} />
+          <Skeleton $h="300px" $r="22px" />
+        </Container>
+      </Page>
+    );
+  }
+
+  const runs = sum(data.batting, "runs");
+  const wickets = sum(data.bowling, "wickets") || sum(data.bowling, "wkts");
+  const matches = sum(data.batting, "matches") || sum(data.bowling, "matches");
+  const span = careerSpan(data.batting, data.bowling, data.fielding);
+  const rows = data[section];
 
   return (
-    <Page theme={theme}>
+    <Page>
       <Header />
-      <Container>
-        {/* ---------- BASIC INFO ---------- */}
-        <Card theme={theme}>
-          <Name theme={theme}>{data.player.name}</Name>
-          <Meta theme={theme}>
-            {data.player.nationality || " "}
-          </Meta>
-        </Card>
+      <Container $max="1000px">
+        <Hero>
+          <Avatar $size="72px" style={{ fontSize: "1.3rem" }}>
+            {initials(data.player.name)}
+          </Avatar>
+          <div style={{ position: "relative" }}>
+            <Eyebrow>{data.player.nationality || data.player.franchise || "Player profile"}</Eyebrow>
+            <Title>{data.player.name}</Title>
+            {span && <div style={{ color: "var(--muted)", marginTop: 4 }}>Career span {span}</div>}
+          </div>
+          <div style={{ marginLeft: "auto", position: "relative" }}>
+            <ButtonLink to="/players" $variant="ghost" $size="sm">
+              All players
+            </ButtonLink>
+          </div>
+        </Hero>
 
-        {/* ---------- BATTING ---------- */}
-        <Card theme={theme}>
-          <SectionTitle theme={theme}>Batting Career Summary</SectionTitle>
-          <TableWrapper>
-            <Table theme={theme}>
+        <Highlights>
+          <Stat>
+            <div className="label">Matches</div>
+            <div className="value">{matches ? matches.toLocaleString() : "—"}</div>
+            <div className="sub">All formats</div>
+          </Stat>
+          <Stat>
+            <div className="label">Runs</div>
+            <div className="value">{runs ? runs.toLocaleString() : "—"}</div>
+            <div className="sub">All formats</div>
+          </Stat>
+          <Stat>
+            <div className="label">Wickets</div>
+            <div className="value">{wickets ? wickets.toLocaleString() : "—"}</div>
+            <div className="sub">All formats</div>
+          </Stat>
+        </Highlights>
+
+        <div style={{ marginBottom: "1rem" }}>
+          <Segmented items={SECTIONS} value={section} onChange={setSection} ariaLabel="Career section" />
+        </div>
+
+        <Panel>
+          <PanelTitle>{SECTIONS.find((s) => s.key === section).label} career summary</PanelTitle>
+          <TableScroll>
+            <DataTable style={{ minWidth: 520 }}>
               <thead>
                 <tr>
                   <th>Stat</th>
@@ -181,63 +213,17 @@ const PlayerProfile = () => {
                 </tr>
               </thead>
               <tbody>
-                {buildRows(
-                  data.batting.test,
-                  data.batting.odi,
-                  data.batting.t20
+                {buildRows(rows.test, rows.odi, rows.t20) || (
+                  <tr>
+                    <td colSpan={4} style={{ color: "var(--muted)" }}>
+                      No {section} records.
+                    </td>
+                  </tr>
                 )}
               </tbody>
-            </Table>
-          </TableWrapper>
-        </Card>
-
-        {/* ---------- BOWLING ---------- */}
-        <Card theme={theme}>
-          <SectionTitle theme={theme}>Bowling Career Summary</SectionTitle>
-          <TableWrapper>
-            <Table theme={theme}>
-              <thead>
-                <tr>
-                  <th>Stat</th>
-                  <th>Test</th>
-                  <th>ODI</th>
-                  <th>T20</th>
-                </tr>
-              </thead>
-              <tbody>
-                {buildRows(
-                  data.bowling.test,
-                  data.bowling.odi,
-                  data.bowling.t20
-                )}
-              </tbody>
-            </Table>
-          </TableWrapper>
-        </Card>
-
-        {/* ---------- FIELDING ---------- */}
-        <Card theme={theme}>
-          <SectionTitle theme={theme}>Fielding Career Summary</SectionTitle>
-          <TableWrapper>
-            <Table theme={theme}>
-              <thead>
-                <tr>
-                  <th>Stat</th>
-                  <th>Test</th>
-                  <th>ODI</th>
-                  <th>T20</th>
-                </tr>
-              </thead>
-              <tbody>
-                {buildRows(
-                  data.fielding.test,
-                  data.fielding.odi,
-                  data.fielding.t20
-                )}
-              </tbody>
-            </Table>
-          </TableWrapper>
-        </Card>
+            </DataTable>
+          </TableScroll>
+        </Panel>
       </Container>
     </Page>
   );

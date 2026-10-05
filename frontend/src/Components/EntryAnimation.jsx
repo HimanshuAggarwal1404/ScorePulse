@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Lottie from "lottie-react";
-import { useTheme } from "../context/ThemeContext";
 import cricketAnimation from "../assets/cricket.json";
 
 /* ---------- Animations ---------- */
 
+// leaves like a material dissolving: fade + slight scale + blur together
 const fadeOut = keyframes`
   to {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(1.03);
+    filter: blur(8px);
   }
 `;
 
@@ -20,12 +21,14 @@ const Overlay = styled.div`
   inset: 0;
   z-index: 9999;
 
-  background: ${({ dark }) => (dark ? "#0b1220" : "#ffffff")};
+  background:
+    radial-gradient(40rem 30rem at 50% 40%, var(--bg-tint-1), transparent 70%),
+    var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
 
-  animation: ${({ exit }) => (exit ? fadeOut : "none")} 0.35s ease forwards;
+  animation: ${({ $exit }) => ($exit ? fadeOut : "none")} 0.35s var(--ease) forwards;
 `;
 
 const AnimationWrapper = styled.div`
@@ -36,7 +39,6 @@ const AnimationWrapper = styled.div`
 /* ---------- Component ---------- */
 
 const EntryAnimation = ({ onFinish }) => {
-  const { darkMode } = useTheme();
   const [exit, setExit] = useState(false);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ const EntryAnimation = ({ onFinish }) => {
   }, [onFinish]);
 
   return (
-    <Overlay dark={darkMode} exit={exit}>
+    <Overlay $exit={exit}>
       <AnimationWrapper>
         <Lottie
           animationData={cricketAnimation}

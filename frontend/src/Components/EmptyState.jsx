@@ -1,63 +1,49 @@
 import React from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
+import { ButtonLink } from "../ui/kit";
+import { glass } from "../ui/styles";
 
 const Wrap = styled.div`
-  padding: 48px 24px;
+  ${glass}
+  padding: 3rem 1.5rem;
   text-align: center;
-  border-radius: 14px;
-  background: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: var(--radius-lg);
 `;
 
 const Icon = styled.div`
-  font-size: 2.5rem;
-  margin-bottom: 12px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  font-size: 1.9rem;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
 `;
 
 const Title = styled.div`
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: ${({ theme }) => theme.textPrimary};
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.35rem;
 `;
 
-const Text = styled.div`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 16px;
+const Text = styled.p`
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin: 0 auto 1.25rem;
+  max-width: 42ch;
 `;
 
-const Action = styled(Link)`
-  display: inline-block;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: ${({ theme }) => theme.highlight};
-  color: #fff;
-  font-weight: 600;
-  text-decoration: none;
-`;
-
-const EmptyState = ({ icon, title, text, actionLabel, actionTo }) => {
-  const { darkMode } = useTheme();
-
-  const theme = {
-    cardBg: darkMode ? "#151c2f" : "#ffffff",
-    border: darkMode ? "#24304a" : "#e5e7eb",
-    textPrimary: darkMode ? "#f5f7fa" : "#0f172a",
-    textMuted: darkMode ? "#9aa4b2" : "#64748b",
-    highlight: darkMode ? "#60a5fa" : "#2563eb",
-  };
-
-  return (
-    <Wrap theme={theme}>
-      <Icon>{icon}</Icon>
-      <Title theme={theme}>{title}</Title>
-      <Text theme={theme}>{text}</Text>
-      {actionLabel && <Action to={actionTo} theme={theme}>{actionLabel}</Action>}
-    </Wrap>
-  );
-};
+const EmptyState = ({ icon, title, text, actionLabel, actionTo }) => (
+  <Wrap>
+    <Icon aria-hidden>{icon}</Icon>
+    <Title>{title}</Title>
+    <Text>{text}</Text>
+    {actionLabel && <ButtonLink to={actionTo}>{actionLabel}</ButtonLink>}
+  </Wrap>
+);
 
 export default EmptyState;

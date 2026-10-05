@@ -2,28 +2,23 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 
+const initialDark = () => {
+  const stored = localStorage.getItem("theme");
+  // 1️⃣ User preference (highest priority)
+  if (stored === "dark") return true;
+  if (stored === "light") return false;
+  // 2️⃣ System preference
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+};
+
 export const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem("theme");
+  const [darkMode, setDarkMode] = useState(initialDark);
 
-    // 1️⃣ User preference (highest priority)
-    if (stored === "dark") return true;
-    if (stored === "light") return false;
-
-    // 2️⃣ System preference
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
-
+  // Colours live in CSS variables keyed off <html data-theme>, see index.scss
   useEffect(() => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
-
-    document.body.style.backgroundColor = darkMode
-      ? "#0b1220"
-      : "#f6f7f9";
-
-    document.body.style.color = darkMode
-      ? "#f5f7fa"
-      : "#0f172a";
+    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", darkMode ? "#050806" : "#f3f6f4");
   }, [darkMode]);
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
@@ -35,4 +30,5 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => useContext(ThemeContext);

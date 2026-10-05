@@ -1,108 +1,103 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import Header from "../Components/Header";
 import { useParams } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
-
-/* ---------- THEME TOKENS ---------- */
-
-const themeTokens = {
-  light: {
-    pageBg: "#f6f7f9",
-    cardBg: "#ffffff",
-    cardBorder: "#e5e7eb",
-    textPrimary: "#0f172a",
-    textMuted: "#64748b",
-  },
-  dark: {
-    pageBg: "#0b1220",
-    cardBg: "#151c2f",
-    cardBorder: "#24304a",
-    textPrimary: "#f5f7fa",
-    textMuted: "#9aa4b2",
-  },
-};
-
-/* ---------- LAYOUT ---------- */
-
-const Page = styled.div`
-  font-family: "Inter", sans-serif;
-  min-height: 100vh;
-  background: ${({ theme }) => theme.pageBg};
-`;
-
-const Container = styled.div`
-  max-width: 900px;
-  margin: 24px auto;
-  padding: 0 16px;
-`;
-
-const Title = styled.h1`
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.textPrimary};
-  margin-bottom: 20px;
-`;
-
-/* ---------- PLAYER CARD ---------- */
+import Header from "../Components/Header";
+import EmptyState from "../Components/EmptyState";
+import { apiGet } from "../api";
+import { Avatar, ButtonLink, Container, Grid, Page, PageHeader, SectionTitle, Skeleton, Tag } from "../ui/kit";
+import { glass, initials } from "../ui/styles";
 
 const PlayerCard = styled.div`
-  background: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.cardBorder};
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  ${glass}
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
 `;
 
-const PlayerName = styled.div`
-  font-size: 1rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.textPrimary};
+const Name = styled.div`
+  font-weight: 650;
+  letter-spacing: -0.01em;
 `;
 
-const PlayerMeta = styled.div`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textMuted};
-  margin-top: 4px;
+const Meta = styled.div`
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.4;
 `;
 
-/* ---------- PAGE ---------- */
+const ROLE_ORDER = ["batsman", "wk", "allrounder", "bowler"];
+const ROLE_TITLES = {
+  batsman: "Batters",
+  wk: "Wicketkeepers",
+  allrounder: "All-rounders",
+  bowler: "Bowlers",
+};
 
 const TeamDetails = () => {
   const { teamId } = useParams();
-  const { darkMode } = useTheme();
-  const theme = darkMode ? themeTokens.dark : themeTokens.light;
-
-  const [players, setPlayers] = useState([]);
+  const [players, setPlayers] = useState(null);
+  const [team, setTeam] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/teams/${teamId}/players`)
-      .then((res) => res.json())
-      .then((data) => setPlayers(data.players || []));
+    apiGet(`/teams/${teamId}/players`)
+      .then((data) => setPlayers(data.players || []))
+      .catch(() => setPlayers([]));
+    apiGet("/teams")
+      .then((data) => setTeam((data.teams || []).find((t) => String(t.id) === String(teamId)) || null))
+      .catch(() => {});
   }, [teamId]);
-const formatRole = (role) => {
-  if (!role) return "";
-  if (role.toLowerCase() === "allrounder") return "All-Rounder";
-  if (role.toLowerCase() === "wk") return "Wicketkeeper";
-  return role.charAt(0).toUpperCase() + role.slice(1);
-};
+
+  const groups = ROLE_ORDER.map((role) => ({
+    role,
+    list: (players || []).filter((p) => (p.role || "").toLowerCase() === role),
+  })).filter((g) => g.list.length);
 
   return (
-    <Page theme={theme}>
+    <Page>
       <Header />
-      <Container>
-        <Title theme={theme}>Squad</Title>
+      <Container $max="1000px">
+        <PageHeader
+          eyebrow={team ? `${team.type} · ${team.short_code}` : "Squad"}
+          title={team ? team.name : "Squad"}
+          subtitle={players ? `${players.length} players in the current squad` : " "}
+        >
+          <ButtonLink to="/teams" $variant="ghost" $size="sm">
+            All teams
+          </ButtonLink>
+        </PageHeader>
 
-        {players.map((player) => (
-          <PlayerCard key={player.id} theme={theme}>
-            <PlayerName theme={theme}>{player.name}</PlayerName>
-            <PlayerMeta theme={theme}>
-              {formatRole(player.role)}
+        {players === null && (
+          <Grid $min="260px">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} $h="72px" $r="22px" />
+            ))}
+          </Grid>
+        )}
 
-              {player.batting_style && ` • ${player.batting_style}`}
-              {player.bowling_style && ` • ${player.bowling_style}`}
-            </PlayerMeta>
-          </PlayerCard>
+        {players?.length === 0 && (
+          <EmptyState icon="👥" title="No squad yet" text="This team's squad hasn't been added." actionLabel="All teams" actionTo="/teams" />
+        )}
+
+        {groups.map(({ role, list }) => (
+          <section key={role}>
+            <SectionTitle>
+              {ROLE_TITLES[role]} <Tag $tone="muted">{list.length}</Tag>
+            </SectionTitle>
+            <Grid $min="260px">
+              {list.map((player) => (
+                <PlayerCard key={player.id}>
+                  <Avatar $subtle>{initials(player.name)}</Avatar>
+                  <div>
+                    <Name>{player.name}</Name>
+                    <Meta>{[player.batting_style, player.bowling_style].filter(Boolean).join(" · ") || player.country}</Meta>
+                  </div>
+                </PlayerCard>
+              ))}
+            </Grid>
+          </section>
         ))}
       </Container>
     </Page>

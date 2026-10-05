@@ -1,22 +1,23 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import MatchCard from "./MatchCard";
+import { glass, pressable } from "../ui/styles";
 
 /* ---------- Styled ---------- */
 
 const Wrapper = styled.div`
   position: relative;
-  width: 100%;
 `;
 
+// Native scroll + snap: the browser supplies 1:1 tracking and momentum.
 const Track = styled.div`
   display: flex;
-  gap: ${({ gap }) => gap}px;
+  gap: ${({ $gap }) => $gap}px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 6px 2px 14px;
-
+  overscroll-behavior-x: contain;
+  padding: 4px 2px 18px;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -24,119 +25,102 @@ const Track = styled.div`
 `;
 
 const Item = styled.div`
-  flex: 0 0 ${({ perView }) => 100 / perView}%;
+  flex: 0 0 calc((100% - ${({ $gap, $perView }) => $gap * ($perView - 1)}px) / ${({ $perView }) => $perView});
   scroll-snap-align: start;
+  min-width: 0;
 `;
-
-/* ---------- Arrows ---------- */
 
 const Arrow = styled.button`
+  ${glass}
+  ${pressable}
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: calc(50% - 9px);
+  translate: 0 -50%;
   z-index: 5;
-
-  width: 34px;
-  height: 34px;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  border: none;
+  color: var(--text);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow);
+  opacity: ${({ disabled }) => (disabled ? 0 : 1)};
+  pointer-events: ${({ disabled }) => (disabled ? "none" : "auto")};
+  transition: opacity var(--quick) var(--ease), transform var(--press) var(--ease);
 
-  background: rgba(0, 0, 0, 0.65);
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-  opacity: ${({ disabled }) => (disabled ? 0.3 : 0.9)};
-
-  &:hover {
-    opacity: ${({ disabled }) => (disabled ? 0.3 : 1)};
+  svg {
+    width: 16px;
+    height: 16px;
   }
-
-  /* Mobile: smaller + inside */
+  @media (hover: hover) {
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent-line);
+    }
+  }
   @media (max-width: 768px) {
-    width: 30px;
-    height: 30px;
-    font-size: 16px;
+    display: none;
   }
 `;
 
-const LeftArrow = styled(Arrow)`
-  left: -14px;
-
-  @media (max-width: 768px) {
-    left: 6px;
-  }
+const Left = styled(Arrow)`
+  left: -1.1rem;
 `;
 
-const RightArrow = styled(Arrow)`
-  right: -14px;
-
-  @media (max-width: 768px) {
-    right: 6px;
-  }
+const Right = styled(Arrow)`
+  right: -1.1rem;
 `;
+
+const Chevron = ({ dir }) => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d={dir < 0 ? "M10 3 5 8l5 5" : "m6 3 5 5-5 5"} />
+  </svg>
+);
 
 /* ---------- Component ---------- */
 
-const MatchCarousel = ({
-  matches = [],
-  cardsPerView = 3,
-  scrollBy = 2,
-  gap = 16,
-}) => {
+const MatchCarousel = ({ matches = [], cardsPerView = 3, scrollBy = 2, gap = 16 }) => {
   const trackRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [width, setWidth] = useState(() => window.innerWidth);
 
-  /* ---------- Detect Mobile ---------- */
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const effectiveCardsPerView = isMobile ? 1 : cardsPerView;
-  const effectiveScrollBy = isMobile ? 1 : scrollBy;
+  const perView = width < 640 ? 1.15 : width < 960 ? 2 : cardsPerView;
 
   const updateEdges = () => {
     const el = trackRef.current;
     if (!el) return;
-
     setAtStart(el.scrollLeft <= 5);
     setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 5);
   };
 
+  useEffect(updateEdges, [matches.length, perView]);
+
   const scroll = (dir) => {
     const el = trackRef.current;
     if (!el) return;
-
-    const cardWidth =
-      el.clientWidth / effectiveCardsPerView + gap;
-
-    el.scrollBy({
-      left: dir * cardWidth * effectiveScrollBy,
-      behavior: "smooth",
-    });
-
-    setTimeout(updateEdges, 300);
+    const card = (el.clientWidth - gap * (Math.ceil(perView) - 1)) / perView + gap;
+    el.scrollBy({ left: dir * card * Math.max(1, Math.min(scrollBy, Math.floor(perView))), behavior: "smooth" });
   };
 
   return (
     <Wrapper>
-      {/* Arrows */}
-      <LeftArrow disabled={atStart} onClick={() => scroll(-1)}>
-        ‹
-      </LeftArrow>
+      <Left disabled={atStart} onClick={() => scroll(-1)} aria-label="Previous matches">
+        <Chevron dir={-1} />
+      </Left>
+      <Right disabled={atEnd} onClick={() => scroll(1)} aria-label="More matches">
+        <Chevron dir={1} />
+      </Right>
 
-      <RightArrow disabled={atEnd} onClick={() => scroll(1)}>
-        ›
-      </RightArrow>
-
-      {/* Track */}
-      <Track ref={trackRef} gap={gap} onScroll={updateEdges}>
-        {matches.map((match, i) => (
-          <Item key={i} perView={effectiveCardsPerView}>
+      <Track ref={trackRef} $gap={gap} onScroll={updateEdges}>
+        {matches.map((match) => (
+          <Item key={match.id} $perView={perView} $gap={gap}>
             <MatchCard matchData={match} />
           </Item>
         ))}

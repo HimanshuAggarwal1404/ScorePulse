@@ -1,252 +1,152 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../Components/Header";
+import EmptyState from "../Components/EmptyState";
+import { useLiveMatch } from "../hooks/useLiveMatch";
+import { LIVE_STATES, palette } from "../Components/match/theme";
+import { Card, Muted, PlayerName } from "../Components/match/ui";
+import MatchHeader from "../Components/match/MatchHeader";
+import LivePanel from "../Components/match/LivePanel";
+import Commentary from "../Components/match/Commentary";
+import Scorecard from "../Components/match/Scorecard";
+import { InfoTab, OversTab, SquadsTab } from "../Components/match/MatchTabs";
+import { Container, Page, Segmented, Skeleton, StickyBar } from "../ui/kit";
 
-/* ---------- STYLES ---------- */
-
-const Page = styled.div`
-  background: #0b1220;
-  min-height: 100vh;
-  color: #f5f7fa;
-  font-family: Inter, sans-serif;
-`;
-
-const Container = styled.div`
-  max-width: 1150px;
-  margin: auto;
-  padding: 24px;
-`;
-
-const Title = styled.h1`
-  font-size: 1.8rem;
-`;
-
-const Sub = styled.div`
-  color: #9aa4b2;
-  margin-bottom: 20px;
-`;
-
-const Tabs = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-`;
-
-const Tab = styled.button`
-  background: ${({ active }) => (active ? "#2563eb" : "#151c2f")};
-  color: #fff;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 999px;
-  cursor: pointer;
+const Connection = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
   font-weight: 600;
-`;
+  color: ${({ $on }) => ($on ? "var(--accent)" : "var(--muted)")};
+  margin-left: auto;
 
-const Card = styled.div`
-  background: #151c2f;
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 28px;
-`;
-
-const BallRow = styled.div`
-  padding: 8px 0;
-  border-bottom: 1px solid #24304a;
-  display: flex;
-  gap: 12px;
-`;
-
-const OverTag = styled.span`
-  color: #60a5fa;
-  min-width: 52px;
-  font-weight: 600;
-`;
-
-const Event = styled.span`
-  color: ${({ type }) =>
-    type === "W" ? "#f87171" :
-    type === "6" ? "#4ade80" :
-    type === "4" ? "#60a5fa" :
-    "#e5e7eb"};
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-
-  th, td {
-    padding: 8px;
-    border-bottom: 1px solid #24304a;
-  }
-
-  th {
-    color: #9aa4b2;
-    font-weight: 600;
-    text-align: left;
+  &::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
   }
 `;
 
-/* ---------- HELPERS ---------- */
+const BarRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+`;
 
-const groupBy = (arr, fn) =>
-  arr.reduce((a, x) => {
-    const k = fn(x);
-    a[k] = a[k] || [];
-    a[k].push(x);
-    return a;
-  }, {});
+const Highlight = styled(Card)`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
 
-/* ---------- PAGE ---------- */
+  .label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+`;
+
+const TABS = [
+  { key: "live", label: "Commentary" },
+  { key: "scorecard", label: "Scorecard" },
+  { key: "overs", label: "Overs" },
+  { key: "squads", label: "Squads" },
+  { key: "info", label: "Info" },
+];
 
 const MatchDetails = () => {
   const { id } = useParams();
-  const [rows, setRows] = useState([]);
-  const [tab, setTab] = useState("balls");
+  const t = palette();
+  const [params, setParams] = useSearchParams();
+  const { data, error, connected } = useLiveMatch(id);
+  const [tab, setTab] = useState(params.get("tab"));
 
-  useEffect(() => {
-    fetch(`http://localhost:8000/api/matches/${id}/scorecard`)
-      .then(r => r.json())
-      .then(d => setRows(d.scorecard || []));
-  }, [id]);
+  const choose = (key) => {
+    setTab(key);
+    setParams({ tab: key }, { replace: true });
+  };
 
-  if (!rows.length) return null;
+  if (error?.status === 404 || error?.status === 400) {
+    return (
+      <Page>
+        <Header />
+        <Container $max="1080px">
+          <EmptyState icon="🏏" title="Match not found" text="This match doesn't exist or was removed." actionLabel="Browse fixtures" actionTo="/fixtures?type=completed" />
+        </Container>
+      </Page>
+    );
+  }
 
-  const inningsMap = groupBy(rows, r => r.innings_id);
+  if (!data) {
+    return (
+      <Page>
+        <Header />
+        <Container $max="1080px">
+          {error ? (
+            <EmptyState icon="⚠️" title="Couldn't load the match" text={error.message} />
+          ) : (
+            <>
+              <Skeleton $h="230px" $r="22px" />
+              <div style={{ height: 16 }} />
+              <Skeleton $h="44px" $w="420px" $r="999px" />
+              <div style={{ height: 16 }} />
+              <Skeleton $h="320px" $r="22px" />
+            </>
+          )}
+        </Container>
+      </Page>
+    );
+  }
+
+  const isLive = LIVE_STATES.includes(data.match.status);
+  // until a tab is picked: commentary while live, scorecard once it's over
+  const current = tab || (isLive || data.match.status === "upcoming" ? "live" : "scorecard");
 
   return (
     <Page>
       <Header />
-      <Container>
-        <Title>
-          {rows[0].batting_team} vs {rows[rows.length - 1].batting_team}
-        </Title>
-        <Sub>
-          {rows[0].match_type} •{" "}
-          {new Date(rows[0].match_date).toDateString()}
-        </Sub>
+      <Container $max="1080px">
+        <MatchHeader data={data} t={t} />
 
-        <Tabs>
-          <Tab active={tab === "balls"} onClick={() => setTab("balls")}>
-            Ball by Ball
-          </Tab>
-          <Tab active={tab === "scorecard"} onClick={() => setTab("scorecard")}>
-            Scorecard
-          </Tab>
-        </Tabs>
+        <StickyBar>
+          <BarRow>
+            <Segmented items={TABS} value={current} onChange={choose} ariaLabel="Match sections" />
+            {isLive && <Connection $on={connected}>{connected ? "Live" : "Reconnecting…"}</Connection>}
+          </BarRow>
+        </StickyBar>
 
-        {Object.values(inningsMap).map((inn, idx) => {
-          let runs = 0;
-          let wickets = 0;
-          const dismissed = new Set();
-          const validBalls = [];
-
-          for (const b of inn) {
-            if (
-              b.over_number > 19 ||
-              (b.over_number === 19 && b.ball_number > 6) ||
-              wickets >= 10
-            ) break;
-
-            validBalls.push(b);
-            runs += b.runs_total;
-
-            if (b.player_out && !dismissed.has(b.player_out)) {
-              wickets++;
-              dismissed.add(b.player_out);
-            }
-          }
-
-          /* ---------- SCORECARD ---------- */
-
-          const batGroups = groupBy(validBalls, b => b.batter);
-          const bowlGroups = groupBy(validBalls, b => b.bowler);
-
-          return (
-            <Card key={idx}>
-              <h3>
-                {inn[0].batting_team} — {runs}/{wickets}
-              </h3>
-
-              {tab === "balls" &&
-                validBalls.map((b, i) => {
-                  let type = "N";
-                  let text = `${b.bowler} to ${b.batter}, ${b.runs_total} run`;
-
-                  if (b.is_boundary) {
-                    type = "4";
-                    text = `${b.bowler} to ${b.batter}, FOUR`;
-                  }
-                  if (b.is_six) {
-                    type = "6";
-                    text = `${b.bowler} to ${b.batter}, SIX`;
-                  }
-                  if (b.player_out) {
-                    type = "W";
-                    text = `${b.bowler} to ${b.batter}, OUT`;
-                  }
-
-                  return (
-                    <BallRow key={i}>
-                      <OverTag>
-                        {b.over_number}.{b.ball_number}
-                      </OverTag>
-                      <Event type={type}>{text}</Event>
-                    </BallRow>
-                  );
-                })}
-
-              {tab === "scorecard" && (
-                <>
-                  <h4>Batting</h4>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <th>Batter</th>
-                        <th>Runs</th>
-                        <th>Balls</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(batGroups).map(([name, balls]) => (
-                        <tr key={name}>
-                          <td>{name}</td>
-                          <td>{balls.reduce((a, b) => a + b.runs_batter, 0)}</td>
-                          <td>{balls.length}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-
-                  <br />
-
-                  <h4>Bowling</h4>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <th>Bowler</th>
-                        <th>Overs</th>
-                        <th>Runs</th>
-                        <th>Wkts</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(bowlGroups).map(([name, balls]) => (
-                        <tr key={name}>
-                          <td>{name}</td>
-                          <td>{(balls.length / 6).toFixed(1)}</td>
-                          <td>{balls.reduce((a, b) => a + b.runs_total, 0)}</td>
-                          <td>{balls.filter(b => b.player_out).length}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </>
-              )}
-            </Card>
-          );
-        })}
+        {current === "live" && (
+          <>
+            {data.match.playerOfMatch && (
+              <Highlight $t={t}>
+                <span className="label">Player of the match</span>
+                <PlayerName player={data.match.playerOfMatch} t={t} />
+              </Highlight>
+            )}
+            {data.match.toss && data.match.status !== "completed" && !data.live && (
+              <Highlight $t={t}>
+                <span className="label">Toss</span>
+                <Muted $t={t} $size="0.95rem">
+                  {data.match.toss.text}
+                </Muted>
+              </Highlight>
+            )}
+            <LivePanel live={data.live} t={t} />
+            <Commentary matchId={id} data={data} t={t} />
+          </>
+        )}
+        {current === "scorecard" && <Scorecard data={data} t={t} />}
+        {current === "overs" && <OversTab data={data} t={t} />}
+        {current === "squads" && <SquadsTab data={data} t={t} />}
+        {current === "info" && <InfoTab data={data} t={t} />}
       </Container>
     </Page>
   );

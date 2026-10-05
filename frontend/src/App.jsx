@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 /* ---------- Pages ---------- */
@@ -15,6 +15,8 @@ import NetworkBanner from "./Components/NetworkBanner";
 import MatchDetails from "./Pages/MatchDetails";
 import TeamDetails from "./Pages/TeamDetails";
 import PlayerProfile from "./Pages/PlayerProfile";
+import Scorer from "./Pages/Scorer";
+import ScorerConsole from "./Pages/ScorerConsole";
 /* ---------- Components ---------- */
 
 import EntryAnimation from "./Components/EntryAnimation";
@@ -22,14 +24,8 @@ import EntryAnimation from "./Components/EntryAnimation";
 /* ---------- App ---------- */
 
 const App = () => {
-  const [showIntro, setShowIntro] = useState(false);
-
-  useEffect(() => {
-    const seen = sessionStorage.getItem("introPlayed");
-    if (!seen) {
-      setShowIntro(true);
-    }
-  }, []);
+  // play the intro once per browser session
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("introPlayed"));
 
   const handleFinish = () => {
     sessionStorage.setItem("introPlayed", "true");
@@ -59,8 +55,12 @@ const App = () => {
         <Route path="/tournaments" element={<Tournaments />} />
         <Route path="/tournament/:id" element={<PointsTable />} />
         <Route path="/tournament/:id/points" element={<PointsTable />} />
-        <Route path="/match/:id" element={<MatchDetails />} />\
+        <Route path="/match/:id" element={<MatchDetails />} />
         <Route path="/teams/:teamId" element={<TeamDetails />} />
+
+        {/* Live scoring */}
+        <Route path="/scorer" element={<Scorer />} />
+        <Route path="/scorer/:id" element={<ScorerConsole />} />
 
         {/* 404 */}
         <Route path="*" element={<ErrorPage />} />

@@ -1,294 +1,243 @@
 import React from "react";
 import styled from "styled-components";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Header from "../Components/Header";
 import EmptyState from "../Components/EmptyState";
-import { useTheme } from "../context/ThemeContext";
+import { useMatchList } from "../hooks/useMatchList";
+import { formatDate, scoreText } from "../Components/match/theme";
+import { Container, LiveDot, Page, PageHeader, Segmented, Skeleton, StickyBar } from "../ui/kit";
+import { glass } from "../ui/styles";
 
-/* ---------- THEME ---------- */
+/* ---------- STYLES ---------- */
 
-const tokens = {
-  light: {
-    bg: "#f6f7f9",
-    card: "#ffffff",
-    border: "#e5e7eb",
-    text: "#0f172a",
-    muted: "#64748b",
-    accent: "#2563eb",
-    hover: "#f1f5f9",
-  },
-  dark: {
-    bg: "#0b1220",
-    card: "#151c2f",
-    border: "#24304a",
-    text: "#f5f7fa",
-    muted: "#9aa4b2",
-    accent: "#60a5fa",
-    hover: "#1e293b",
-  },
-};
-
-/* ---------- LAYOUT ---------- */
-
-const Page = styled.div`
-  min-height: 100vh;
-  background: ${({ theme }) => theme.bg};
-  font-family: "Inter", sans-serif;
-`;
-
-const Container = styled.div`
-  max-width: 1100px;
-  margin: 24px auto;
-  padding: 0 16px;
-`;
-
-const Title = styled.h1`
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 16px;
-`;
-
-/* ---------- STICKY TABS ---------- */
-
-const StickyTabs = styled.div`
-  position: sticky;
-  top: 64px;
-  z-index: 50;
-  background: ${({ theme }) => theme.bg};
-  padding: 12px 0;
-`;
-
-const Tabs = styled.div`
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-`;
-
-const Tab = styled.button`
-  background: ${({ active, theme }) =>
-    active ? theme.accent : "transparent"};
-  color: ${({ active }) => (active ? "#fff" : "inherit")};
-  border: 1px solid ${({ theme }) => theme.border};
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  white-space: nowrap;
-
-  &:hover {
-    background: ${({ active, theme }) =>
-      active ? theme.accent : theme.hover};
-  }
-`;
-
-/* ---------- SERIES BLOCK ---------- */
-
-const SeriesBlock = styled.div`
-  margin-top: 20px;
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
+const SeriesBlock = styled.section`
+  ${glass}
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  margin-bottom: 1rem;
 `;
 
 const SeriesHeader = styled.div`
-  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.text};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  background: ${({ theme }) => theme.hover};
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--border);
+
+  span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
 `;
 
-/* ---------- MATCH LIST ---------- */
-
-const MatchRow = styled.div`
+const MatchRow = styled(Link)`
   display: grid;
   grid-template-columns: 1fr auto;
-  padding: 14px 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) => theme.hover};
-  }
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--quick) var(--ease);
 
   &:last-child {
     border-bottom: none;
   }
-
-  @media (max-width: 768px) {
+  &:active {
+    background: var(--hover);
+  }
+  @media (hover: hover) {
+    &:hover {
+      background: var(--hover);
+    }
+  }
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 0.6rem;
   }
 `;
 
-const MatchInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+const Sides = styled.div`
+  display: grid;
+  gap: 0.35rem;
 `;
 
-const Teams = styled.div`
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
+const Side = styled.div`
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: ${({ $strong }) => ($strong ? 700 : 550)};
+  opacity: ${({ $dim }) => ($dim ? 0.6 : 1)};
+
+  .short {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-align: center;
+    padding: 0.2rem 0;
+    border-radius: 7px;
+    background: var(--solid-2);
+    color: var(--text-2);
+  }
+  .score {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+`;
+
+const Info = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  text-align: right;
+  min-width: 220px;
+
+  @media (max-width: 720px) {
+    align-items: flex-start;
+    text-align: left;
+    min-width: 0;
+  }
 `;
 
 const Meta = styled.div`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.muted};
+  font-size: 0.78rem;
+  color: var(--muted);
 `;
 
 const Status = styled.div`
+  display: flex;
+  align-items: center;
   font-size: 0.85rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.accent};
+  font-weight: 650;
+  color: ${({ $live }) => ($live ? "var(--live)" : "var(--accent)")};
 `;
 
-/* ---------- MOCK DATA ---------- */
+/* ---------- HELPERS ---------- */
 
-const fixturesData = {
- past: [
-    {
-      series: "India Tour of Australia 2024",
-      matches: [
-        {
-          id: "m1",
-          teams: "India vs Australia",
-          meta: "T20I • Melbourne",
-          status: "India won by 45 runs",
-        },
-        {
-          id: "m2",
-          teams: "India vs Australia",
-          meta: "ODI • Sydney",
-          status: "Australia won by 6 wickets",
-        },
-      ],
-    },
-  ],
-  current: [
-    {
-      series: "Pakistan Tour of New Zealand 2025",
-      matches: [
-        {
-          id: "m3",
-          teams: "New Zealand vs Pakistan",
-          meta: "Test • Wellington",
-          status: "Day 3 • NZ lead by 112 runs",
-        },
-      ],
-    },
-  ],
-  future: [
-    {
-      series: "England Tour of India 2025",
-      matches: [
-        {
-          id: "m4",
-          teams: "India vs England",
-          meta: "Test • Ahmedabad",
-          status: "Starts Tomorrow",
-        },
-        {
-          id: "m5",
-          teams: "India vs England",
-          meta: "ODI • Delhi",
-          status: "Starts in 3 days",
-        },
-      ],
-    },
-    {
-      series: "South Africa Tour of Australia 2025",
-      matches: [
-        {
-          id: "m6",
-          teams: "Australia vs South Africa",
-          meta: "ODI • Perth",
-          status: "Starts in 5 days",
-        },
-      ],
-    },
-  ],
+// old links used past / current / future
+const CATEGORY_ALIASES = { past: "completed", current: "live", future: "upcoming" };
+
+const TABS = [
+  { key: "live", label: "Live" },
+  { key: "upcoming", label: "Upcoming" },
+  { key: "completed", label: "Results" },
+];
+
+const EMPTY = {
+  live: { title: "Nothing live right now", text: "There are no matches in play at the moment." },
+  upcoming: { title: "No fixtures yet", text: "No upcoming matches have been scheduled." },
+  completed: { title: "No results yet", text: "Finished matches will appear here." },
 };
+
+const groupBySeries = (matches) => {
+  const groups = new Map();
+  for (const m of matches) {
+    const key = m.series || "Other matches";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  }
+  return [...groups.entries()].map(([series, list]) => ({ series, matches: list }));
+};
+
+const sideScore = (side) =>
+  side.innings.length
+    ? side.innings.map((i) => `${scoreText(i)}${side.innings.length === 1 ? ` (${i.overs})` : ""}`).join(" & ")
+    : "";
 
 /* ---------- PAGE ---------- */
 
 const Fixtures = () => {
-  const { darkMode } = useTheme();
-  const theme = darkMode ? tokens.dark : tokens.light;
-
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-
-  const category = searchParams.get("type") || "current";
-  const seriesList = fixturesData[category] || [];
-
-  const isEmpty =
-    seriesList.length === 0 ||
-    seriesList.every((s) => s.matches.length === 0);
+  const raw = searchParams.get("type") || "live";
+  const category = CATEGORY_ALIASES[raw] || raw;
+  const { matches } = useMatchList(`/matches?status=${category}&limit=100`);
+  const seriesList = groupBySeries(matches || []);
+  const isEmpty = matches !== null && seriesList.length === 0;
 
   return (
-    <Page theme={theme}>
+    <Page>
       <Header />
 
-      <Container>
-        <Title theme={theme}>Fixtures</Title>
+      <Container $max="1080px">
+        <PageHeader eyebrow="Matches" title="Fixtures & results" subtitle="Every match, grouped by series. Live scores update by themselves." />
 
-        <StickyTabs theme={theme}>
-          <Tabs>
-            {[
-              { key: "past", label: "Archive" },
-              { key: "current", label: "Current" },
-              { key: "future", label: "Upcoming" },
-            ].map((t) => (
-              <Tab
-                key={t.key}
-                theme={theme}
-                active={category === t.key}
-                onClick={() => setSearchParams({ type: t.key })}
-              >
-                {t.label}
-              </Tab>
-            ))}
-          </Tabs>
-        </StickyTabs>
+        <StickyBar>
+          <Segmented items={TABS} value={category} onChange={(key) => setSearchParams({ type: key })} ariaLabel="Match status" />
+        </StickyBar>
 
-        {/* EMPTY STATE */}
+        {matches === null && (
+          <>
+            <Skeleton $h="180px" $r="22px" />
+            <div style={{ height: 16 }} />
+            <Skeleton $h="120px" $r="22px" />
+          </>
+        )}
+
         {isEmpty && (
           <EmptyState
             icon="📅"
-            title="No matches right now"
-            text={
-              category === "current"
-                ? "There are no live or ongoing matches at the moment."
-                : "No matches available in this section."
-            }
-            actionLabel="View Upcoming Fixtures"
-            actionTo="/fixtures?type=future"
+            title={EMPTY[category].title}
+            text={EMPTY[category].text}
+            actionLabel={category === "completed" ? "See live matches" : "See results"}
+            actionTo={category === "completed" ? "/fixtures?type=live" : "/fixtures?type=completed"}
           />
         )}
 
-        {/* SERIES LIST */}
-        {!isEmpty &&
-          seriesList.map((series) => (
-            <SeriesBlock key={series.series} theme={theme}>
-              <SeriesHeader theme={theme}>{series.series}</SeriesHeader>
+        {seriesList.map((series) => (
+          <SeriesBlock key={series.series}>
+            <SeriesHeader>
+              {series.series}
+              <span>
+                {series.matches.length} match{series.matches.length === 1 ? "" : "es"}
+              </span>
+            </SeriesHeader>
 
-              {series.matches.map((m) => (
-                <MatchRow
-                  key={m.id}
-                  theme={theme}
-                  onClick={() => navigate(`/match/${m.id}`)}
-                >
-                  <MatchInfo>
-                    <Teams theme={theme}>{m.teams}</Teams>
-                    <Meta theme={theme}>{m.meta}</Meta>
-                  </MatchInfo>
+            {series.matches.map((m) => {
+              const batting = [m.team1, m.team2].find((s) => s.innings.some((i) => i.batting));
+              return (
+                <MatchRow key={m.id} to={`/match/${m.id}`}>
+                  <Sides>
+                    {[m.team1, m.team2].map((side) => (
+                      <Side
+                        key={side.id}
+                        $strong={m.winnerId === side.id || batting?.id === side.id}
+                        $dim={(m.winnerId && m.winnerId !== side.id) || (batting && batting.id !== side.id)}
+                      >
+                        <span className="short">{side.short}</span>
+                        <span>{side.name}</span>
+                        <span className="score">{sideScore(side)}</span>
+                      </Side>
+                    ))}
+                  </Sides>
 
-                  <Status theme={theme}>{m.status}</Status>
+                  <Info>
+                    <Meta>
+                      {[m.title, m.title?.includes(m.formatLabel) ? null : m.formatLabel, m.venue?.name, formatDate(m.startDate)]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Meta>
+                    <Status $live={m.isLive}>
+                      {m.isLive && <LiveDot style={{ marginRight: 6 }} />}
+                      {m.statusText}
+                    </Status>
+                  </Info>
                 </MatchRow>
-              ))}
-            </SeriesBlock>
-          ))}
+              );
+            })}
+          </SeriesBlock>
+        ))}
       </Container>
     </Page>
   );

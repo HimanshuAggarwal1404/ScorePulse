@@ -1,16 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import Header from "../Components/Header";
 import MatchCarousel from "../Components/MatchCarousel";
 import MatchCarouselSkeleton from "../Components/MatchCarouselSkeleton";
+import MatchCard from "../Components/MatchCard";
 import EmptyState from "../Components/EmptyState";
-import { useTheme } from "../context/ThemeContext";
-import { use } from "react";
-
-/* ---------- MOCK MATCH DATA ---------- */
-
-
-
+import { useMatchList } from "../hooks/useMatchList";
+import { ButtonLink, Container, Eyebrow, LiveDot, Page, SectionTitle, Skeleton } from "../ui/kit";
+import { glass, pressable } from "../ui/styles";
 
 /* ---------- TOP STORIES ---------- */
 
@@ -49,142 +46,219 @@ const latestNews = [
   },
 ];
 
-/* ---------- STYLES ---------- */
+/* ---------- HERO ---------- */
 
-const Page = styled.div`
-  min-height: 100vh;
-  font-family: "Inter", sans-serif;
-  background: ${({ dark }) => (dark ? "#0b1220" : "#f6f7f9")};
-`;
+const Hero = styled.section`
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 1.5rem 0 1rem;
 
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 28px auto;
-  padding: 0 16px;
-`;
-
-const SectionTitle = styled.h2`
-  margin: 40px 0 18px;
-  font-size: 1.45rem;
-  font-weight: 700;
-`;
-
-const ViewAllWrapper = styled.div`
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-`;
-
-const ViewAllButton = styled.a`
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
-  color: ${({ dark }) => (dark ? "#60a5fa" : "#2563eb")};
-
-  &:hover {
-    text-decoration: underline;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-top: 0.5rem;
   }
 `;
 
-/* ---------- TOP STORIES ---------- */
+const Display = styled.h1`
+  text-wrap: balance;
+  font-size: clamp(2.3rem, 5.4vw, 4rem);
+  font-weight: 750;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
 
-const TopStoriesGrid = styled.div`
+  em {
+    font-style: normal;
+    color: var(--accent);
+    text-shadow: 0 0 32px var(--accent-soft);
+  }
+`;
+
+const Lede = styled.p`
+  margin: 1rem 0 1.5rem;
+  max-width: 46ch;
+  color: var(--text-2);
+  font-size: 1.05rem;
+  line-height: 1.55;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+const Featured = styled.div`
+  position: relative;
+
+  /* soft neon halo behind the featured card */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8% 6%;
+    background: radial-gradient(closest-side, var(--accent-soft), transparent);
+    filter: blur(24px);
+    z-index: -1;
+  }
+`;
+
+const FeaturedLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+`;
+
+const SectionHead = styled.div`
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+`;
+
+const SeeAll = styled(ButtonLink).attrs({ $variant: "ghost", $size: "sm" })``;
+
+/* ---------- STORIES & NEWS ---------- */
+
+const StoriesGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  gap: 16px;
+  gap: 1rem;
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr 1fr;
   }
-
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const StoryCard = styled.div`
-  background: ${({ theme }) => theme.cardBg};
-  border-radius: 14px;
-  overflow: hidden;
-`;
-
-const StoryImage = styled.img`
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-`;
-
-const StoryTitle = styled.div`
-  padding: 14px;
-  font-weight: 600;
-`;
-
-/* ---------- NEWS ---------- */
-
 const NewsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
+  gap: 1rem;
 `;
 
-const NewsCard = styled.div`
-  background: ${({ theme }) => theme.cardBg};
-  border-radius: 12px;
+const Story = styled.article`
+  ${glass}
+  ${pressable}
+  border-radius: var(--radius-lg);
   overflow: hidden;
+
+  @media (hover: hover) {
+    &:hover img {
+      transform: scale(1.04);
+    }
+  }
 `;
 
-const NewsImage = styled.img`
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
+const Media = styled.div`
+  height: ${({ $h }) => $h};
+  overflow: hidden;
+  background:
+    radial-gradient(closest-side at 30% 40%, var(--accent-soft), transparent),
+    linear-gradient(135deg, var(--solid-2), var(--solid));
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms var(--ease);
+  }
 `;
 
-const NewsContent = styled.div`
-  padding: 12px 14px;
+const StoryBody = styled.div`
+  padding: 1rem 1.1rem 1.15rem;
 `;
 
-const NewsTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: 6px;
+const StoryTitle = styled.h3`
+  font-size: ${({ $big }) => ($big ? "1.15rem" : "1rem")};
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
 `;
 
-const NewsMeta = styled.div`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.muted};
+const StoryMeta = styled.div`
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--muted);
 `;
+
+// Falls back to a branded placeholder if the image can't load.
+const Cover = ({ src, alt, h }) => {
+  const [failed, setFailed] = useState(false);
+  return (
+    <Media $h={h}>
+      {failed ? <span aria-hidden>🏏</span> : <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} />}
+    </Media>
+  );
+};
 
 /* ---------- PAGE ---------- */
+
 const Home = () => {
-  const [matchesData, setMatchesData] = useState([]);
-  const { darkMode } = useTheme();
-  const [loading, setLoading] = useState(true);
-
-  const theme = {
-    cardBg: darkMode ? "#151c2f" : "#ffffff",
-    muted: darkMode ? "#9aa4b2" : "#64748b",
-  };
-  useEffect(() => {
-    fetch("http://localhost:8000/api/matches/recent")
-      .then((res) => res.json())
-      .then(setMatchesData)
-      .catch(() => setMatchesData([]));
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // live matches first, then the latest results; refreshed whenever a match changes
+  const { matches } = useMatchList("/matches/recent?limit=10");
+  const matchesData = matches || [];
+  const loading = matches === null;
+  const anyLive = matchesData.some((m) => m.isLive);
+  const [featured, ...rest] = matchesData;
 
   return (
-    <Page dark={darkMode}>
+    <Page>
       <Header />
 
       <Container>
-        {/* RECENT MATCHES */}
-        <SectionTitle>RECENT MATCHES</SectionTitle>
+        <Hero>
+          <div>
+            <Eyebrow>Live cricket, ball by ball</Eyebrow>
+            <Display>
+              Every ball.
+              <br />
+              <em>The moment</em> it's bowled.
+            </Display>
+            <Lede>
+              Live scores, full scorecards and commentary that update instantly - from the first ball to the last.
+            </Lede>
+            <Actions>
+              <ButtonLink to="/fixtures?type=live">
+                {anyLive && <LiveDot style={{ background: "var(--accent-ink)" }} />}
+                Live scores
+              </ButtonLink>
+              <ButtonLink to="/fixtures?type=completed" $variant="ghost">
+                Results
+              </ButtonLink>
+            </Actions>
+          </div>
+
+          <Featured>
+            <FeaturedLabel>
+              {featured?.isLive ? (
+                <>
+                  <LiveDot /> Happening now
+                </>
+              ) : (
+                "Latest result"
+              )}
+            </FeaturedLabel>
+            {loading ? <Skeleton $h="178px" $r="22px" /> : featured ? <MatchCard matchData={featured} /> : null}
+          </Featured>
+        </Hero>
+
+        <SectionHead>
+          <SectionTitle>{anyLive ? "Live & recent" : "Recent matches"}</SectionTitle>
+          <SeeAll to="/fixtures?type=completed">All results</SeeAll>
+        </SectionHead>
 
         {loading ? (
           <MatchCarouselSkeleton />
@@ -192,48 +266,36 @@ const Home = () => {
           <EmptyState
             icon="🏏"
             title="No matches right now"
-            text="Check upcoming fixtures or recent results"
-            actionLabel="View Fixtures"
-            actionTo="/fixtures"
+            text="Check upcoming fixtures or recent results."
+            actionLabel="View fixtures"
+            actionTo="/fixtures?type=upcoming"
           />
         ) : (
-          <>
-            <MatchCarousel
-              matches={matchesData}
-              cardsPerView={3}
-              scrollBy={2}
-            />
-
-            <ViewAllWrapper>
-              <ViewAllButton dark={darkMode} href="/fixtures">
-                View all matches →
-              </ViewAllButton>
-            </ViewAllWrapper>
-          </>
+          <MatchCarousel matches={rest.length ? rest : matchesData} cardsPerView={3} scrollBy={2} />
         )}
 
-        {/* TOP STORIES */}
-        <SectionTitle>TOP STORIES</SectionTitle>
-        <TopStoriesGrid>
+        <SectionTitle>Top stories</SectionTitle>
+        <StoriesGrid>
           {topStories.map((s, i) => (
-            <StoryCard key={i} theme={theme}>
-              <StoryImage src={s.image} alt={s.title} loading="lazy" />
-              <StoryTitle>{s.title}</StoryTitle>
-            </StoryCard>
+            <Story key={s.title}>
+              <Cover src={s.image} alt={s.title} h={i === 0 ? "240px" : "160px"} />
+              <StoryBody>
+                <StoryTitle $big={i === 0}>{s.title}</StoryTitle>
+              </StoryBody>
+            </Story>
           ))}
-        </TopStoriesGrid>
+        </StoriesGrid>
 
-        {/* LATEST NEWS */}
-        <SectionTitle>LATEST NEWS</SectionTitle>
+        <SectionTitle>Latest news</SectionTitle>
         <NewsGrid>
-          {latestNews.map((n, i) => (
-            <NewsCard key={i} theme={theme}>
-              <NewsImage src={n.image} alt={n.title} loading="lazy" />
-              <NewsContent>
-                <NewsTitle>{n.title}</NewsTitle>
-                <NewsMeta theme={theme}>{n.meta}</NewsMeta>
-              </NewsContent>
-            </NewsCard>
+          {latestNews.map((n) => (
+            <Story key={n.title}>
+              <Cover src={n.image} alt={n.title} h="150px" />
+              <StoryBody>
+                <StoryTitle>{n.title}</StoryTitle>
+                <StoryMeta>{n.meta}</StoryMeta>
+              </StoryBody>
+            </Story>
           ))}
         </NewsGrid>
       </Container>

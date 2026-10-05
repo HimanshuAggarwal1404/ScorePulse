@@ -1,181 +1,127 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Header from "../Components/Header";
-import { useTheme } from "../context/ThemeContext";
+import EmptyState from "../Components/EmptyState";
+import { apiGet } from "../api";
+import { Avatar, Button, Container, Grid, Muted, Page, PageHeader, SearchField, Skeleton } from "../ui/kit";
+import { glass, initials, pressable } from "../ui/styles";
 
-/* ---------- THEME ---------- */
+const PAGE_SIZE = 60;
 
-const tokens = {
-  light: {
-    pageBg: "#f6f7f9",
-    cardBg: "#ffffff",
-    border: "#e5e7eb",
-    text: "#0f172a",
-    muted: "#64748b",
-    hover: "#f1f5f9",
-  },
-  dark: {
-    pageBg: "#0b1220",
-    cardBg: "#151c2f",
-    border: "#24304a",
-    text: "#f5f7fa",
-    muted: "#9aa4b2",
-    hover: "#1e293b",
-  },
-};
-
-/* ---------- STYLES ---------- */
-
-const Page = styled.div`
-  min-height: 100vh;
-  background: ${({ theme }) => theme.pageBg};
-  font-family: "Inter", sans-serif;
-`;
-
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 16px;
-`;
-
-const TitleRow = styled.div`
+const PlayerCard = styled(Link)`
+  ${glass}
+  ${pressable}
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  gap: 12px;
-`;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
 
-const PageTitle = styled.h1`
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
-`;
-
-const SearchInput = styled.input`
-  width: 220px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid ${({ theme }) => theme.border};
-  background: ${({ theme }) => theme.cardBg};
-  color: ${({ theme }) => theme.text};
-
-  @media (max-width: 600px) {
-    width: 100%;
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--accent-line);
+    }
   }
 `;
 
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 18px;
-`;
-
-const PlayerCard = styled.div`
-  background: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 14px;
-  padding: 14px;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
-
-  &:hover {
-    background: ${({ theme }) => theme.hover};
-    transform: translateY(-3px);
-  }
-`;
-
-const TopRow = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-`;
-
-const Avatar = styled.div`
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.border};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-`;
-
-const PlayerName = styled.div`
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
+const Name = styled.div`
+  font-weight: 650;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const Meta = styled.div`
-  font-size: 0.75rem;
-  color: ${({ theme }) => theme.muted};
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 1px;
 `;
 
-/* ---------- PAGE ---------- */
+const Footer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+`;
 
 const Players = () => {
-  const { darkMode } = useTheme();
-  const theme = darkMode ? tokens.dark : tokens.light;
-  const navigate = useNavigate();
-
-  const [players, setPlayers] = useState([]);
+  const [players, setPlayers] = useState(null);
   const [search, setSearch] = useState("");
+  const [shown, setShown] = useState(PAGE_SIZE);
+  // keep typing responsive while thousands of names are filtered
+  const query = useDeferredValue(search);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/players")
-      .then(res => res.json())
+    apiGet("/players")
       .then(setPlayers)
-      .catch(console.error);
+      .catch(() => setPlayers([]));
   }, []);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return players.filter(p =>
-      p.name.toLowerCase().includes(q)
-    );
-  }, [players, search]);
+    const q = query.trim().toLowerCase();
+    return (players || []).filter((p) => !q || p.name.toLowerCase().includes(q));
+  }, [players, query]);
 
   return (
-    <Page theme={theme}>
+    <Page>
       <Header />
       <Container>
-        <TitleRow>
-          <PageTitle theme={theme}>Players</PageTitle>
-          <SearchInput
-            theme={theme}
-            placeholder="Search players…"
+        <PageHeader
+          eyebrow="Players"
+          title="Players"
+          subtitle={players ? `${players.length.toLocaleString()} players with career records across Tests, ODIs and T20s.` : " "}
+        >
+          <SearchField
+            placeholder="Search players"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setShown(PAGE_SIZE);
+            }}
+            aria-label="Search players"
           />
-        </TitleRow>
+        </PageHeader>
 
-        <Grid>
-          {filtered.map(p => (
-            <PlayerCard
-              key={p.id}
-              theme={theme}
-              onClick={() => navigate(`/players/${p.id}`)}
-            >
-              <TopRow>
-                <Avatar theme={theme}>
-                  {p.name
-                    .split(" ")
-                    .slice(0, 2)
-                    .map(w => w[0])
-                    .join("")}
-                </Avatar>
-                <div>
-                  <PlayerName theme={theme}>{p.name}</PlayerName>
-                  <Meta theme={theme}>
-                    {p.nationality || " "}
-                  </Meta>
-                </div>
-              </TopRow>
-            </PlayerCard>
-          ))}
-        </Grid>
+        {players === null ? (
+          <Grid $min="230px">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} $h="70px" $r="22px" />
+            ))}
+          </Grid>
+        ) : filtered.length === 0 ? (
+          <EmptyState icon="🔎" title="No players found" text={`Nothing matches “${query}”. Try a surname, e.g. “Kohli”.`} />
+        ) : (
+          <>
+            <Grid $min="230px">
+              {filtered.slice(0, shown).map((p) => (
+                <PlayerCard key={p.id} to={`/players/${p.id}`}>
+                  <Avatar $subtle>{initials(p.name)}</Avatar>
+                  <div style={{ minWidth: 0 }}>
+                    <Name>{p.name}</Name>
+                    <Meta>{p.nationality || p.franchise || "Career stats"}</Meta>
+                  </div>
+                </PlayerCard>
+              ))}
+            </Grid>
+
+            <Footer>
+              <Muted>
+                Showing {Math.min(shown, filtered.length).toLocaleString()} of {filtered.length.toLocaleString()}
+              </Muted>
+              {shown < filtered.length && (
+                <Button $variant="ghost" onClick={() => setShown((s) => s + PAGE_SIZE * 2)}>
+                  Show more
+                </Button>
+              )}
+            </Footer>
+          </>
+        )}
       </Container>
     </Page>
   );

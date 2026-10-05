@@ -1,9 +1,12 @@
 import pkg from "pg";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
-const { Pool } = pkg;
+const { Pool, types } = pkg;
+
+// DATE -> "YYYY-MM-DD" as-is; a JS Date would shift it by the server's timezone
+types.setTypeParser(1082, (v) => v);
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -13,7 +16,7 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
 });
 
-pool.on("connect", () => {
+pool.once("connect", () => {
   console.log("PostgreSQL connected");
 });
 

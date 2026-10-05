@@ -1,170 +1,172 @@
-import React, { useEffect, useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { useTheme } from "../context/ThemeContext";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import styled from "styled-components";
+import { Link } from "react-router-dom";
+import { scoreText } from "./match/theme";
+import { LiveDot } from "./match/ui";
+import { glass, pressable } from "../ui/styles";
 
-/* ---------- THEME ---------- */
-
-const colors = {
-  light: {
-    cardBg: "#ffffff",
-    border: "#e5e7eb",
-    textPrimary: "#0f172a",
-    textSecondary: "#64748b",
-    textMuted: "#94a3b8",
-    liveAccent: "#dc2626",
-    highlight: "#2563eb",
-    winner: "#16a34a",
-  },
-  dark: {
-    cardBg: "#151c2f",
-    border: "#24304a",
-    textPrimary: "#f5f7fa",
-    textSecondary: "#c7d0dd",
-    textMuted: "#9aa4b2",
-    liveAccent: "#f87171",
-    highlight: "#60a5fa",
-    winner: "#22c55e",
-  },
-};
-
-/* ---------- ANIMATION ---------- */
-
-const pulse = keyframes`
-  0% { opacity: 1 }
-  50% { opacity: 0.55 }
-  100% { opacity: 1 }
-`;
-
-/* ---------- STYLED ---------- */
-
-const Card = styled.div`
+const Card = styled(Link)`
+  ${glass}
+  ${pressable}
   position: relative;
-  background: ${({ theme }) => theme.cardBg};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 14px;
-  padding: 14px 16px;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  height: 100%;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  overflow: hidden;
+
+  /* live matches carry a thin neon edge */
+  ${({ $live }) =>
+    $live &&
+    `
+    border-color: var(--accent-line);
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+  `}
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--accent-line);
+    }
+  }
 `;
 
-const Header = styled.div`
+const Top = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.74rem;
+  color: var(--muted);
 `;
 
-const MatchType = styled.span`
-  font-size: 12px;
+const Meta = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 600;
-  text-transform: uppercase;
 `;
 
 const Live = styled.span`
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.66rem;
   font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--live);
 `;
 
 const TeamRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  opacity: ${({ $dim }) => ($dim ? 0.6 : 1)};
+`;
+
+const Mono = styled.span`
+  min-width: 2.2rem;
+  height: 1.6rem;
+  padding: 0 0.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  background: ${({ $on }) => ($on ? "var(--accent)" : "var(--solid-2)")};
+  color: ${({ $on }) => ($on ? "var(--accent-ink)" : "var(--text-2)")};
 `;
 
 const TeamName = styled.span`
-  font-size: 14px;
-  font-weight: 600;
+  font-weight: ${({ $strong }) => ($strong ? 700 : 600)};
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const Score = styled.div`
-  font-size: 15px;
-  font-weight: 700;
-  animation: ${({ live }) => (live ? pulse : "none")} 1.4s infinite;
+const Score = styled.span`
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  small {
+    font-family: var(--font);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-left: 0.3rem;
+    color: var(--muted);
+  }
 `;
 
-const Overs = styled.div`
-  font-size: 11px;
+const Status = styled.div`
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: ${({ $live }) => ($live ? "var(--live)" : "var(--accent)")};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-/* ---------- COMPONENT ---------- */
+const scoreFor = (side) =>
+  side.innings.length
+    ? side.innings.map((i, idx) => (
+        <React.Fragment key={idx}>
+          {idx > 0 && " & "}
+          {scoreText(i)}
+          {side.innings.length === 1 && <small>{i.overs} ov</small>}
+        </React.Fragment>
+      ))
+    : null;
 
-const MatchCard = ({ matchData }) => {
-  const { darkMode } = useTheme();
-  const theme = darkMode ? colors.dark : colors.light;
-  const navigate = useNavigate();
-
-  const [deliveries, setDeliveries] = useState([]);
-
-  const isLive = matchData?.live === true;
-
-  useEffect(() => {
-    if (!matchData?.id) return;
-
-    fetch(`http://localhost:8000/api/matches/recent`)
-      .then((res) => res.json())
-      .then((data) => {
-        setDeliveries(Array.isArray(data.scorecard) ? data.scorecard : []);
-      })
-      .catch(() => setDeliveries([]));
-  }, [matchData?.id]);
-
-  /* ---------- AGGREGATE DELIVERIES ---------- */
-
-  const inningsMap = {};
-
-  deliveries.forEach((d) => {
-    if (!inningsMap[d.innings_id]) {
-      inningsMap[d.innings_id] = {
-        batting_team: d.batting_team,
-        runs: 0,
-        wickets: 0,
-        balls: 0,
-      };
-    }
-
-    inningsMap[d.innings_id].runs += d.runs_total || 0;
-    inningsMap[d.innings_id].balls += 1;
-    if (d.player_out) inningsMap[d.innings_id].wickets += 1;
-  });
-
-  const innings = Object.values(inningsMap);
-
-  /* ---------- 🔑 FIX IS HERE ---------- */
-  const teams = [matchData?.team1, matchData?.team2].filter(
-    (t) => t && t.name
-  );
+const MatchCard = ({ matchData: m }) => {
+  if (!m) return null;
+  const batting = [m.team1, m.team2].find((s) => s.innings.some((i) => i.batting));
 
   return (
-    <Card
-      theme={theme}
-      onClick={() => navigate(`/match/${matchData.id}`)}
-    >
-      <Header>
-        <MatchType>{matchData?.format}</MatchType>
-        {isLive && <Live>LIVE</Live>}
-      </Header>
-
-      {teams.map((team, idx) => {
-        const inn = innings.find(
-          (i) => i.batting_team === team.name
-        );
-
+    <Card to={`/match/${m.id}`} $live={m.isLive}>
+      <Top>
+        <Meta>
+          {[m.title, m.title?.includes(m.formatLabel) ? null : m.formatLabel, m.venue?.city || m.venue?.name]
+            .filter(Boolean)
+            .join(" · ")}
+        </Meta>
+        {m.isLive && (
+          <Live>
+            <LiveDot />
+            LIVE
+          </Live>
+        )}
+      </Top>
+      {[m.team1, m.team2].map((side) => {
+        const strong = m.winnerId === side.id || batting?.id === side.id;
         return (
-          <TeamRow key={idx}>
-            <TeamName>{team.name}</TeamName>
-
-            {inn ? (
-              <div>
-                <Score live={isLive}>
-                  {inn.runs}/{inn.wickets}
-                </Score>
-                <Overs>{(inn.balls / 6).toFixed(1)} ov</Overs>
-              </div>
-            ) : (
-              <Overs>Yet to bat</Overs>
-            )}
+          <TeamRow key={side.id} $dim={(m.winnerId && m.winnerId !== side.id) || (batting && batting.id !== side.id)}>
+            <Mono $on={batting?.id === side.id}>{side.short}</Mono>
+            <TeamName $strong={strong}>{side.name}</TeamName>
+            <Score>{scoreFor(side)}</Score>
           </TeamRow>
         );
       })}
+      <Status $live={m.isLive}>{m.statusText}</Status>
     </Card>
   );
 };

@@ -2,82 +2,26 @@ import React from "react";
 import styled from "styled-components";
 import { useParams } from "react-router-dom";
 import Header from "../Components/Header";
-import { useTheme } from "../context/ThemeContext";
+import EmptyState from "../Components/EmptyState";
+import { ButtonLink, Container, DataTable, Glass, Page, PageHeader, TableScroll } from "../ui/kit";
 
-/* ---------- THEME ---------- */
-
-const tokens = {
-  light: {
-    bg: "#f6f7f9",
-    card: "#ffffff",
-    border: "#e5e7eb",
-    text: "#0f172a",
-    muted: "#64748b",
-    hover: "#f1f5f9",
-  },
-  dark: {
-    bg: "#0b1220",
-    card: "#151c2f",
-    border: "#24304a",
-    text: "#f5f7fa",
-    muted: "#9aa4b2",
-    hover: "#1e293b",
-  },
-};
-
-/* ---------- LAYOUT ---------- */
-
-const Page = styled.div`
-  min-height: 100vh;
-  background: ${({ theme }) => theme.bg};
-  font-family: "Inter", sans-serif;
+const Pos = styled.span`
+  display: inline-grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-right: 0.75rem;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  background: ${({ $q }) => ($q ? "var(--accent-soft)" : "var(--solid-2)")};
+  color: ${({ $q }) => ($q ? "var(--accent)" : "var(--text-2)")};
+  border: 1px solid ${({ $q }) => ($q ? "var(--accent-line)" : "transparent")};
 `;
 
-const Container = styled.div`
-  max-width: 1100px;
-  margin: 24px auto;
-  padding: 0 16px;
-`;
-
-const Title = styled.h1`
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 16px;
-`;
-
-/* ---------- TABLE ---------- */
-
-const Card = styled.div`
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 14px;
-  overflow-x: auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 700px;
-`;
-
-const Th = styled.th`
-  padding: 12px;
-  text-align: left;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.muted};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-`;
-
-const Td = styled.td`
-  padding: 12px;
-  font-size: 0.95rem;
-  color: ${({ theme }) => theme.text};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-`;
-
-const Tr = styled.tr`
-  &:hover {
-    background: ${({ theme }) => theme.hover};
-  }
+const Nrr = styled.span`
+  color: ${({ $v }) => ($v.startsWith("-") ? "var(--live)" : "var(--win)")};
+  font-weight: 650;
 `;
 
 /* ---------- MOCK BACKEND DATA ---------- */
@@ -105,54 +49,57 @@ const pointsTableData = {
 
 const PointsTable = () => {
   const { id } = useParams();
-  const { darkMode } = useTheme();
-  const theme = darkMode ? tokens.dark : tokens.light;
-
   const tournament = pointsTableData[id];
 
-  if (!tournament) {
-    return (
-      <Page theme={theme}>
-        <Header />
-        <Container>
-          <Title theme={theme}>Points Table Not Found</Title>
-        </Container>
-      </Page>
-    );
-  }
-
   return (
-    <Page theme={theme}>
+    <Page>
       <Header />
-      <Container>
-        <Title theme={theme}>{tournament.name}</Title>
+      <Container $max="1000px">
+        {!tournament ? (
+          <EmptyState icon="🏆" title="Points table not found" text="This competition doesn't have a points table yet." actionLabel="All tournaments" actionTo="/tournaments" />
+        ) : (
+          <>
+            <PageHeader eyebrow="Points table" title={tournament.name}>
+              <ButtonLink to="/tournaments" $variant="ghost" $size="sm">
+                All tournaments
+              </ButtonLink>
+            </PageHeader>
 
-        <Card theme={theme}>
-          <Table>
-            <thead>
-              <tr>
-                <Th theme={theme}>Team</Th>
-                <Th theme={theme}>P</Th>
-                <Th theme={theme}>W</Th>
-                <Th theme={theme}>L</Th>
-                <Th theme={theme}>NRR</Th>
-                <Th theme={theme}>Pts</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {tournament.table.map((row, i) => (
-                <Tr key={i} theme={theme}>
-                  <Td theme={theme}>{row.team}</Td>
-                  <Td theme={theme}>{row.p}</Td>
-                  <Td theme={theme}>{row.w}</Td>
-                  <Td theme={theme}>{row.l}</Td>
-                  <Td theme={theme}>{row.nrr}</Td>
-                  <Td theme={theme}>{row.pts}</Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
-        </Card>
+            <Glass $pad="0.5rem 0.75rem">
+              <TableScroll>
+                <DataTable style={{ minWidth: 560 }}>
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>P</th>
+                      <th>W</th>
+                      <th>L</th>
+                      <th>NRR</th>
+                      <th>Pts</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tournament.table.map((row, i) => (
+                      <tr key={row.team}>
+                        <td>
+                          <Pos $q={i < 4}>{i + 1}</Pos>
+                          <b style={{ fontWeight: 650 }}>{row.team}</b>
+                        </td>
+                        <td>{row.p}</td>
+                        <td>{row.w}</td>
+                        <td>{row.l}</td>
+                        <td>
+                          <Nrr $v={row.nrr}>{row.nrr}</Nrr>
+                        </td>
+                        <td style={{ fontWeight: 750 }}>{row.pts}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
+              </TableScroll>
+            </Glass>
+          </>
+        )}
       </Container>
     </Page>
   );
