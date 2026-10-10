@@ -226,12 +226,19 @@ export const setSquad = (matchId, teamId, players, opts = {}) =>
 const insertPlayer = async (client, matchId, teamId, p) => {
   const { rows } = await client.query(
     `INSERT INTO match_players
-       (match_id, team_id, name, registry_id, player_id, player_stats_id, role, is_captain, is_keeper, list_order)
+       (match_id, team_id, name, registry_id, player_id, role, is_captain, is_keeper, list_order)
      VALUES (
        $1, $2, $3, $4,
-       COALESCE($5, (SELECT id FROM players WHERE lower(name) = lower($3) LIMIT 1)),
-       COALESCE($6, (SELECT id FROM players_stats WHERE lower(name) = lower($3) LIMIT 1)),
-       $7, $8, $9, $10)
+       -- profile: picked in the console, else Cricsheet registry, else same name (this team's squad first)
+       COALESCE(
+         (SELECT id FROM players WHERE id = $5),
+         (SELECT id FROM players WHERE cricsheet_id = $4),
+         (SELECT p.id FROM players p
+            LEFT JOIN player_teams pt ON pt.player_id = p.id AND pt.team_id = $2
+           WHERE lower(p.name) = lower($3)
+           ORDER BY (pt.team_id IS NOT NULL) DESC, (p.country_team_id = $2) DESC NULLS LAST
+           LIMIT 1)),
+       $6, $7, $8, $9)
      ON CONFLICT (match_id, team_id, name) DO UPDATE SET role = match_players.role
      RETURNING id`,
     [
@@ -240,7 +247,6 @@ const insertPlayer = async (client, matchId, teamId, p) => {
       String(p.name).trim(),
       p.registryId || null,
       p.playerId || null,
-      p.playerStatsId || null,
       p.role || "playing",
       !!p.isCaptain,
       !!p.isKeeper,

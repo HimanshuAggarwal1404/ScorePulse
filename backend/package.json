@@ -11,7 +11,10 @@
     "import:cricsheet": "node scripts/import-cricsheet.js",
     "verify": "node scripts/verify-scorecards.js",
     "test": "node scripts/test-engine.js && node scripts/verify-scorecards.js",
-    "test:engine": "node scripts/test-engine.js"
+    "test:engine": "node scripts/test-engine.js",
+    "players:fetch": "node scripts/players/fetch.js",
+    "players:load": "node scripts/players/load.js",
+    "players:sync": "node scripts/players/fetch.js && node scripts/players/load.js"
   },
   "keywords": [],
   "author": "",

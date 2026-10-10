@@ -25,9 +25,8 @@ export const requireScorer = (req, res, next) => {
 export const getTeamsWithSquads = async (req, res) => {
   const { rows: teams } = await db.query("SELECT id, name, short_code, type FROM teams ORDER BY type, name");
   const { rows: squad } = await db.query(
-    `SELECT pt.team_id, p.id, p.name, p.role
+    `SELECT pt.team_id, p.id, p.name, p.role, p.role_label, p.country, p.image_url
        FROM player_teams pt JOIN players p ON p.id = pt.player_id
-      WHERE pt.is_current = true
       ORDER BY p.name`
   );
   res.json({

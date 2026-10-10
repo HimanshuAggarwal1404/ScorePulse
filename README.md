@@ -40,18 +40,21 @@ Inspired by platforms like Cricbuzz and ESPNcricinfo, the goal of this project i
 - Rain delays, stumps, DLS target revisions, declarations, manual results, player of the match, substitutes
 - Replay any real Cricsheet match from `MatchesData/` live, at a chosen speed
 
-### 🧑‍🤝‍🧑 Teams & Squads
-- Fully relational team–player model
-- Supports:
-  - International teams
-  - IPL franchises
-- IPL 2026 squads populated using real players
-- Players can belong to multiple teams across seasons
-- Dedicated Teams page with:
-  - Dynamic SQL-backed data
-  - Team → Squad navigation
+### 🧑‍🤝‍🧑 Teams, Squads & Players
+- Current squads of 12 international sides and all 10 IPL franchises (real 2026 squads), plus the domestic sides in the imported matches
+- 600+ player profiles: photo, role, batting / bowling style, date and place of birth, ICC rankings, debuts, recent form
+- Career records for Tests, ODIs, T20Is and the IPL: batting, bowling and fielding
+- Every team a player has represented: national side, IPL, other leagues (BBL, PSL, SA20, The Hundred, CPL ...) and domestic sides
+- Players page with leaderboards, team / role filters, search and sorting; team pages show the squad grouped by role
+- Scorecard names link to profiles (matched through the Cricsheet registry), and profiles list the player's matches on ScorePulse
+- The scorer picks each XI by searching the team's squad (or every player), so new matches link to profiles too
 
+**Where the data comes from** (`npm run players:sync`):
+- [Cricbuzz](https://www.cricbuzz.com): squads, profiles, images, batting & bowling records
+- [ESPNcricinfo Statsguru](https://stats.espncricinfo.com): fielding records, and full records for players Cricbuzz doesn't list
+- [Cricsheet people register](https://cricsheet.org/register/): ties imported ball-by-ball matches to players
 
+The result is committed as `backend/db/seed/players.json`, so `npm run players:load` builds the player tables without touching the network.
 
 ---
 
@@ -139,6 +142,7 @@ cp .env.example .env          # fill in DB_PASSWORD (and optionally SCORER_KEY)
 npm install
 npm run db:migrate            # creates the live-scoring tables (skips ones already applied)
 npm run import:cricsheet      # imports every match in MatchesData/ through the engine
+npm run players:load          # players, squads and career records from db/seed/players.json
 npm run dev                   # http://localhost:8000
 
 # frontend
@@ -165,9 +169,8 @@ npm run dev                   # http://localhost:5173  (set VITE_API_URL if the 
 ---
 
 ## 📌 Potential Extensions
-- Player statistics & career summaries
 - Auction and transfer history
-- Linking scorecards to career stats for more players (currently exact-name matches only)
+- Refresh squads and records on a schedule (`npm run players:sync` re-fetches; responses are cached in `backend/.cache`)
 - DLS par-score calculation (targets are entered by the scorer today)
 
 ---

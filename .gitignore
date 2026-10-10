@@ -26,3 +26,9 @@ dist-ssr
 *.sln
 *.sw?
 !.env.example
+
+# Player sync HTTP cache
+backend/.cache
+
+# keep migrations tracked despite the bare "migrations" rule above
+!backend/db/migrations/

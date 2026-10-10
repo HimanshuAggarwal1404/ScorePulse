@@ -42,7 +42,7 @@ export const loadMatchData = async (db, matchId) => {
 
   const [players, innings, deliveries, wickets, fielders] = await Promise.all([
     db.query(
-      `SELECT id, team_id, name, player_stats_id, role, is_captain, is_keeper, list_order
+      `SELECT id, team_id, name, player_id, role, is_captain, is_keeper, list_order
          FROM match_players WHERE match_id = $1
         ORDER BY team_id, list_order, id`,
       [matchId]
@@ -146,7 +146,7 @@ const computeInnings = (inn, dels, ctx) => {
       batters.set(id, {
         id,
         name: name(id),
-        profileId: playerById.get(id)?.player_stats_id ?? null,
+        profileId: playerById.get(id)?.player_id ?? null,
         order: batters.size,
         runs: 0,
         balls: 0,
@@ -171,7 +171,7 @@ const computeInnings = (inn, dels, ctx) => {
       bowlers.set(id, {
         id,
         name: name(id),
-        profileId: playerById.get(id)?.player_stats_id ?? null,
+        profileId: playerById.get(id)?.player_id ?? null,
         order: bowlers.size,
         legalBalls: 0,
         maidens: 0,
@@ -419,7 +419,7 @@ const computeInnings = (inn, dels, ctx) => {
   const batted = new Set(batters.keys());
   const didNotBat = ctx.players
     .filter((p) => p.team_id === inn.batting_team_id && p.role === "playing" && !batted.has(p.id))
-    .map((p) => ({ id: p.id, name: p.name, profileId: p.player_stats_id }));
+    .map((p) => ({ id: p.id, name: p.name, profileId: p.player_id }));
 
   const bowling = [...bowlers.values()]
     .sort((a, b) => a.order - b.order)
@@ -628,7 +628,7 @@ export const buildMatchView = (data) => {
       .map((p) => ({
         id: p.id,
         name: p.name,
-        profileId: p.player_stats_id,
+        profileId: p.player_id,
         role: p.role,
         isCaptain: p.is_captain,
         isKeeper: p.is_keeper,
@@ -682,7 +682,7 @@ export const buildMatchView = (data) => {
         ? {
             id: match.player_of_match_id,
             name: name(match.player_of_match_id),
-            profileId: playerById.get(match.player_of_match_id)?.player_stats_id ?? null,
+            profileId: playerById.get(match.player_of_match_id)?.player_id ?? null,
           }
         : null,
       officials: {

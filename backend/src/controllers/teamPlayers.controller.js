@@ -10,14 +10,15 @@ export const getTeamPlayers = async (req, res) => {
         p.id,
         p.name,
         p.role,
+        p.role_label,
         p.batting_style,
         p.bowling_style,
-        p.country
+        p.country,
+        p.image_url
       FROM players p
       JOIN player_teams pt ON pt.player_id = p.id
       WHERE pt.team_id = $1
-        AND pt.is_current = true
-      ORDER BY p.role, p.name
+      ORDER BY p.name
       `,
       [teamId]
     );
