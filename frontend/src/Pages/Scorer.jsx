@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../Components/Header";
 import { Container, Page, PageHeader } from "../ui/kit";
 import { useTheme } from "../context/ThemeContext";
@@ -11,10 +11,15 @@ import { useAction } from "../hooks/useAction";
 
 const FORMAT_OVERS = { T20: 20, T10: 10, ODI: 50, TEST: "", LIST_A: 50, FIRST_CLASS: "" };
 
+const FIELDS = ["team1Id", "team2Id", "format", "overs", "venueName", "venueCity", "seriesName", "title", "startDate"];
+
 const NewMatch = ({ teams, t }) => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const today = todayISO();
-  const [f, setF] = useState({
+  // "Score this match" on the fixtures page arrives with the fixture in the URL
+  const prefilled = params.has("team1Id");
+  const [f, setF] = useState(() => ({
     team1Id: "",
     team2Id: "",
     format: "T20",
@@ -24,7 +29,12 @@ const NewMatch = ({ teams, t }) => {
     seriesName: "",
     title: "",
     startDate: today,
-  });
+    ...Object.fromEntries(FIELDS.filter((k) => params.has(k)).map((k) => [k, params.get(k)])),
+  }));
+  const card = useRef(null);
+  useEffect(() => {
+    if (prefilled) card.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [prefilled]);
   const { busy, error, run } = useAction();
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
 
@@ -40,8 +50,13 @@ const NewMatch = ({ teams, t }) => {
     });
 
   return (
-    <Card $t={t}>
+    <Card $t={t} ref={card} style={{ scrollMarginTop: "calc(var(--header-h) + 16px)" }}>
       <Heading $t={t}>Score a new match</Heading>
+      {prefilled && (
+        <Muted $t={t} style={{ display: "block", marginBottom: 10 }}>
+          Filled in from the fixture - check the details and create the match.
+        </Muted>
+      )}
       <Row $align="flex-end">
         <Field $t={t}>
           Home / team 1

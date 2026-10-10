@@ -49,7 +49,13 @@ Inspired by platforms like Cricbuzz and ESPNcricinfo, the goal of this project i
 - Scorecard names link to profiles (matched through the Cricsheet registry), and profiles list the player's matches on ScorePulse
 - The scorer picks each XI by searching the team's squad (or every player), so new matches link to profiles too
 
-**Where the data comes from** (`npm run players:sync`):
+### 📅 Fixtures, Rankings & News
+- Fixtures page shows the real cricket calendar and recent / live results. Fixtures never link out: ones ScorePulse has scored open our own ball-by-ball page, and the rest offer **Score this match**, which opens the scorer console already filled in
+- Live ICC rankings for teams, batters, bowlers and all-rounders in all three formats, linked to team pages and player profiles
+- Teams page with flags, IPL crests, current ICC positions and squad faces
+- Home page news from ESPNcricinfo
+
+**Where the player data comes from** (`npm run players:sync`):
 - [Cricbuzz](https://www.cricbuzz.com): squads, profiles, images, batting & bowling records
 - [ESPNcricinfo Statsguru](https://stats.espncricinfo.com): fielding records, and full records for players Cricbuzz doesn't list
 - [Cricsheet people register](https://cricsheet.org/register/): ties imported ball-by-ball matches to players
@@ -164,6 +170,9 @@ npm run dev                   # http://localhost:5173  (set VITE_API_URL if the 
 | GET | `/api/matches/:id/scorecard` | scorecards only |
 | GET | `/api/matches/:id/commentary?innings=&before=&limit=` | paged commentary |
 | GET | `/api/matches/:id/stream`, `/api/matches/stream` | Server-Sent Events |
+| GET | `/api/fixtures?type=upcoming\|results` | real-world calendar (Cricbuzz), linked to ScorePulse matches where we have them |
+| GET | `/api/rankings` | ICC men's team & player rankings (via Cricbuzz, refreshed every 6 h) |
+| GET | `/api/news` | cricket headlines (ESPNcricinfo RSS, refreshed every 10 min) |
 | * | `/api/scoring/...` | scorer console (see `backend/src/routes/scoring.routes.js`) |
 
 ---

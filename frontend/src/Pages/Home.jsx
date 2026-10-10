@@ -1,50 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import Header from "../Components/Header";
 import MatchCarousel from "../Components/MatchCarousel";
 import MatchCarouselSkeleton from "../Components/MatchCarouselSkeleton";
 import MatchCard from "../Components/MatchCard";
 import EmptyState from "../Components/EmptyState";
+import NewsSection from "../Components/NewsSection";
 import { useMatchList } from "../hooks/useMatchList";
 import { ButtonLink, Container, Eyebrow, LiveDot, Page, SectionTitle, Skeleton } from "../ui/kit";
-import { glass, pressable } from "../ui/styles";
-
-/* ---------- TOP STORIES ---------- */
-
-const topStories = [
-  {
-    title: "India dominate Australia in series decider",
-    image: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d",
-  },
-  {
-    title: "England rethink white-ball strategy",
-    image: "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf",
-  },
-  {
-    title: "Why Test cricket still matters",
-    image: "https://images.unsplash.com/photo-1593766788306-28561086694b",
-  },
-];
-
-/* ---------- LATEST NEWS ---------- */
-
-const latestNews = [
-  {
-    title: "Rohit Sharma set to return for final ODI",
-    image: "https://images.unsplash.com/photo-1606907568152-58fcb0a0a61e",
-    meta: "India • 2h ago",
-  },
-  {
-    title: "South Africa middle-order concerns deepen",
-    image: "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf",
-    meta: "South Africa • 4h ago",
-  },
-  {
-    title: "ICC considering changes to WTC points system",
-    image: "https://images.unsplash.com/photo-1593766788306-28561086694b",
-    meta: "ICC • 6h ago",
-  },
-];
 
 /* ---------- HERO ---------- */
 
@@ -125,85 +88,6 @@ const SectionHead = styled.div`
 
 const SeeAll = styled(ButtonLink).attrs({ $variant: "ghost", $size: "sm" })``;
 
-/* ---------- STORIES & NEWS ---------- */
-
-const StoriesGrid = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 1rem;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr 1fr;
-  }
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const NewsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
-`;
-
-const Story = styled.article`
-  ${glass}
-  ${pressable}
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-
-  @media (hover: hover) {
-    &:hover img {
-      transform: scale(1.04);
-    }
-  }
-`;
-
-const Media = styled.div`
-  height: ${({ $h }) => $h};
-  overflow: hidden;
-  background:
-    radial-gradient(closest-side at 30% 40%, var(--accent-soft), transparent),
-    linear-gradient(135deg, var(--solid-2), var(--solid));
-  display: grid;
-  place-items: center;
-  font-size: 2rem;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 600ms var(--ease);
-  }
-`;
-
-const StoryBody = styled.div`
-  padding: 1rem 1.1rem 1.15rem;
-`;
-
-const StoryTitle = styled.h3`
-  font-size: ${({ $big }) => ($big ? "1.15rem" : "1rem")};
-  font-weight: 650;
-  line-height: 1.3;
-  letter-spacing: -0.012em;
-`;
-
-const StoryMeta = styled.div`
-  margin-top: 0.35rem;
-  font-size: 0.78rem;
-  color: var(--muted);
-`;
-
-// Falls back to a branded placeholder if the image can't load.
-const Cover = ({ src, alt, h }) => {
-  const [failed, setFailed] = useState(false);
-  return (
-    <Media $h={h}>
-      {failed ? <span aria-hidden>🏏</span> : <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} />}
-    </Media>
-  );
-};
-
 /* ---------- PAGE ---------- */
 
 const Home = () => {
@@ -274,30 +158,7 @@ const Home = () => {
           <MatchCarousel matches={rest.length ? rest : matchesData} cardsPerView={3} scrollBy={2} />
         )}
 
-        <SectionTitle>Top stories</SectionTitle>
-        <StoriesGrid>
-          {topStories.map((s, i) => (
-            <Story key={s.title}>
-              <Cover src={s.image} alt={s.title} h={i === 0 ? "240px" : "160px"} />
-              <StoryBody>
-                <StoryTitle $big={i === 0}>{s.title}</StoryTitle>
-              </StoryBody>
-            </Story>
-          ))}
-        </StoriesGrid>
-
-        <SectionTitle>Latest news</SectionTitle>
-        <NewsGrid>
-          {latestNews.map((n) => (
-            <Story key={n.title}>
-              <Cover src={n.image} alt={n.title} h="150px" />
-              <StoryBody>
-                <StoryTitle>{n.title}</StoryTitle>
-                <StoryMeta>{n.meta}</StoryMeta>
-              </StoryBody>
-            </Story>
-          ))}
-        </NewsGrid>
+        <NewsSection />
       </Container>
     </Page>
   );

@@ -7,7 +7,7 @@ import PlayerCard from "../Components/PlayerCard";
 import { apiGet } from "../api";
 import { Button, Container, Glass, Grid, Muted, Page, PageHeader, SearchField, Segmented, SectionTitle, Skeleton, Tag } from "../ui/kit";
 import { glass, pressable } from "../ui/styles";
-import { PlayerPhoto, TeamMono } from "../ui/players";
+import { PlayerPhoto, TeamLogo } from "../ui/players";
 import { ROLES, caps, fmtNum, topRanking, total } from "../ui/playerStats";
 
 const PAGE_SIZE = 48;
@@ -363,9 +363,7 @@ const Players = () => {
                 <TeamStrip>
                   {groupTeams.map((t) => (
                     <TeamChip key={t.id} $active={t.id === teamId} onClick={() => setParam("team", t.id === teamId ? null : t.id)}>
-                      <TeamMono $code={t.short_code} $size="1.75rem" $small>
-                        {t.short_code}
-                      </TeamMono>
+                      <TeamLogo src={t.logo} code={t.short_code} size={22} crest={t.type === "franchise"} label={t.name} />
                       {t.name}
                       <Muted $size="0.76rem">{t.count}</Muted>
                     </TeamChip>

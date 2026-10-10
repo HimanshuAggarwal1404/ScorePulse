@@ -6,7 +6,7 @@ import EmptyState from "../Components/EmptyState";
 import PlayerCard from "../Components/PlayerCard";
 import { apiGet } from "../api";
 import { ButtonLink, Container, Glass, Grid, Page, SectionTitle, Skeleton, Tag, Title, Eyebrow } from "../ui/kit";
-import { TeamMono } from "../ui/players";
+import { TeamLogo } from "../ui/players";
 import { ROLES, caps, fmtNum, teamColor, topRanking, total } from "../ui/playerStats";
 
 const Banner = styled(Glass)`
@@ -88,11 +88,7 @@ const Squad = ({ teamId }) => {
       <Header />
       <Container $max="1180px">
         <Banner $color={teamColor(team?.short_code)}>
-          {team && (
-            <TeamMono $code={team.short_code} $size="3.5rem">
-              {team.short_code}
-            </TeamMono>
-          )}
+          {team && <TeamLogo src={team.logo} code={team.short_code} size={team.type === "franchise" ? 72 : 52} crest={team.type === "franchise"} label={team.name} />}
           <div>
             <Eyebrow>{team ? `${team.type === "franchise" ? "IPL franchise" : team.type} squad` : "Squad"}</Eyebrow>
             <Title>{team ? team.name : "Squad"}</Title>

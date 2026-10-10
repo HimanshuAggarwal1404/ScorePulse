@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
+import { flightData, valueAfter as objectAfter } from "../../src/lib/cricbuzz.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = path.resolve(here, "../../.cache/players");
@@ -85,40 +86,6 @@ export const get = async (url) => {
 /* ------------------------------------------------------------------ */
 /* CRICBUZZ                                                            */
 /* ------------------------------------------------------------------ */
-
-// Next.js streams page data as self.__next_f.push([1,"..."]) chunks.
-const flightData = (html) => {
-  let out = "";
-  for (const m of html.matchAll(/self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)/g)) {
-    out += JSON.parse(`"${m[1]}"`);
-  }
-  return out;
-};
-
-// The JSON object that follows `"key":` in a blob of text.
-const objectAfter = (text, key) => {
-  const at = text.indexOf(`"${key}":{`);
-  if (at < 0) return null;
-  const start = text.indexOf("{", at);
-  let depth = 0;
-  let inString = false;
-  for (let i = start; i < text.length; i++) {
-    const c = text[i];
-    if (inString) {
-      if (c === "\\") i++;
-      else if (c === '"') inString = false;
-    } else if (c === '"') inString = true;
-    else if (c === "{") depth++;
-    else if (c === "}" && --depth === 0) {
-      try {
-        return JSON.parse(text.slice(start, i + 1));
-      } catch {
-        return null;
-      }
-    }
-  }
-  return null;
-};
 
 export const parseTeamPage = (html) => {
   const data = flightData(html);

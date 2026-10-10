@@ -64,3 +64,44 @@ export const PlayerPhoto = ({ src, name, size = 56, code, className }) => {
     </PhotoRing>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* TEAM LOGO                                                           */
+/* ------------------------------------------------------------------ */
+
+const LogoBox = styled.span`
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: ${({ $w }) => $w}px;
+  height: ${({ $h }) => $h}px;
+  border-radius: ${({ $crest }) => ($crest ? "0" : "8px")};
+  overflow: hidden;
+  box-shadow: ${({ $crest }) => ($crest ? "none" : "0 0 0 1px var(--border), 0 2px 8px -2px rgba(0, 0, 0, 0.35)")};
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: ${({ $crest }) => ($crest ? "contain" : "cover")};
+    filter: ${({ $crest }) => ($crest ? "drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25))" : "none")};
+  }
+`;
+
+// Flag (international / state sides) or crest (franchises), falling back to
+// the team's monogram. `crest` keeps the whole image; flags are cropped to fit.
+export const TeamLogo = ({ src, code, size = 40, crest = false, label }) => {
+  const [failed, setFailed] = useState(false);
+  const w = crest ? size : Math.round(size * 1.33);
+  if (!src || failed) {
+    return (
+      <TeamMono $code={code} $size={`${size}px`} $small={size < 34} title={label}>
+        {code}
+      </TeamMono>
+    );
+  }
+  return (
+    <LogoBox $w={w} $h={size} $crest={crest} title={label}>
+      <img src={src} alt={label ? `${label} logo` : ""} loading="lazy" onError={() => setFailed(true)} />
+    </LogoBox>
+  );
+};
