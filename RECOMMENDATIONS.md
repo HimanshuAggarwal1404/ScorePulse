@@ -28,22 +28,28 @@ Legend: 🔴 Critical · 🟠 High · 🟡 Medium · 🟢 Nice to have
 - [ ] **`/series/:id` route doesn't exist.** Clicking a series on the Tournaments page lands on the 404 page.
   - **Where:** `frontend/src/Pages/Tournaments.jsx` (`linkFor`) and `frontend/src/App.jsx`.
   - **Fix:** add a series page, or link series to a filtered Fixtures view instead.
-- [ ] **The players API depends on the working directory.**
+- [x] **The players API depends on the working directory.**
+  - Done: the controller no longer reads SQL files.
   - **Where:** `backend/src/controllers/players.controller.js`.
   - **Problem:** it loads `path.resolve("src/queries/players.sql")`, which only works when the server is started from `backend/`. Started from the repo root, `/api/players` crashes.
   - **Fix:** resolve the path relative to the file with `fileURLToPath(import.meta.url)`, as `backend/src/scoring/cricsheet.js` does.
-- [ ] **`/api/players` returns all 4,976 rows in one response.**
+- [x] **`/api/players` returns all 4,976 rows in one response.**
+  - Done: the CSV data was replaced by 624 real players; the response is gzipped (401 KB to 66 KB) and accepts `?team=`.
   - **Fix:** add server-side `?search=&limit=&offset=` and make the Players page request pages instead of filtering everything in the browser.
-- [ ] **The players SQL file is split with a fragile regex.**
+- [x] **The players SQL file is split with a fragile regex.**
+  - Done: queries live in the controller.
   - **Where:** `getQuery()` in `players.controller.js` cuts `players.sql` apart by comment markers.
   - **Fix:** move each query into its own file, or into constants.
 
 ## 🟠 4. Security before deploying anywhere
 
 - [ ] **Real scorer authentication.** Today one shared `SCORER_KEY` is stored in the browser's `localStorage`. Replace it with user accounts and roles (scorer, admin): session or JWT login, and record who scored each ball.
-- [ ] **Restrict CORS.** `app.use(cors())` currently allows any website to call the API. Allowlist the frontend's own domain.
-- [ ] **Rate limiting** on `/api/scoring/*` (for example `express-rate-limit`).
-- [ ] **Security headers** with `helmet`.
+- [x] **Restrict CORS.** `app.use(cors())` currently allows any website to call the API. Allowlist the frontend's own domain.
+  - Done: `CORS_ORIGIN` allowlist with wildcard support for preview deploys.
+- [x] **Rate limiting** on `/api/scoring/*` (for example `express-rate-limit`).
+  - Done: tiered limits for reads, scoring and third-party-backed endpoints.
+- [x] **Security headers** with `helmet`.
+  - Done: `helmet`.
 - [ ] **Validate request bodies** with a schema library (zod or joi) on the scoring endpoints. The engine already checks the cricket rules, but not the shape of the request.
 
 ## 🟠 5. Automated tests and CI
@@ -63,15 +69,19 @@ Legend: 🔴 Critical · 🟠 High · 🟡 Medium · 🟢 Nice to have
   - **Why:** `matches.tournament_id` now exists, so standings can be calculated from results instead of the hard-coded `pointsTableData`.
   - **What to calculate:** played, won, lost, tied, no result, points, and net run rate from `innings_totals`.
 - [ ] **Tournaments page from the `tournaments` table** instead of the hard-coded `tournamentsData`.
-- [ ] **Rankings:** either compute simple rankings, or hide the page until real data exists. `mockRankings` only has a few hard-coded rows.
-- [ ] **Home page "Top stories" and "Latest news" are hard-coded.** Either add a small news table and admin form, or remove the sections. Two of the stock image links are already broken.
+- [x] **Rankings:** either compute simple rankings, or hide the page until real data exists. `mockRankings` only has a few hard-coded rows.
+  - Done: live ICC rankings via Cricbuzz (`/api/rankings`).
+- [x] **Home page "Top stories" and "Latest news" are hard-coded.** Either add a small news table and admin form, or remove the sections. Two of the stock image links are already broken.
+  - Done: live ESPNcricinfo headlines (`/api/news`).
 
 ## 🟡 7. Clean up the data model
 
-- [ ] **Link scorecard players to career stats reliably.**
+- [x] **Link scorecard players to career stats reliably.**
+  - Done: Cricsheet registry IDs; 282 of 290 scorecard players link to profiles.
   - **Why:** only 83 of 268 scorecard players link to a profile, because linking needs an exact name match.
   - **How:** use Cricsheet's people register (`people.csv` maps registry IDs to Cricinfo IDs) and store the ID on `players_stats`.
-- [ ] **Merge or link the two player tables.** `players` (squads) and `players_stats` (career records) describe the same people with no connection; add a foreign key, or merge them.
+- [x] **Merge or link the two player tables.** `players` (squads) and `players_stats` (career records) describe the same people with no connection; add a foreign key, or merge them.
+  - Done: one `players` table (migration `002_players.sql`).
 - [ ] **One team code column.** `teams` has both `short_code` and `code` (SAF vs RSA, SLK vs SL, NZL). Keep one and update the queries.
 - [ ] **The `match_format` enum is unused.** Drop it, or use it for `matches.format`.
 
@@ -80,10 +90,13 @@ Legend: 🔴 Critical · 🟠 High · 🟡 Medium · 🟢 Nice to have
 - [ ] **Shared live-update channel across servers.**
   - **Why:** the live-update hub (`backend/src/scoring/events.js`) and the replay timers (`replay.js`) live in a single server's memory. With more than one backend instance, viewers on other instances won't get updates.
   - **How:** Postgres `LISTEN/NOTIFY` is the simplest option; Redis pub/sub is the common one.
-- [ ] **Choose a host that supports long-lived connections** for Server-Sent Events. Most serverless platforms don't. Also disable proxy buffering: the API already sends `X-Accel-Buffering: no`.
+- [x] **Choose a host that supports long-lived connections** for Server-Sent Events. Most serverless platforms don't. Also disable proxy buffering: the API already sends `X-Accel-Buffering: no`.
+  - Done: Render (see README > Deployment, `render.yaml`).
 - [ ] **Run replays from one place only.** Make sure only one instance runs them, using a lock or a separate worker process.
-- [ ] **Health check:** add a `/api/health` endpoint that also pings the database.
-- [ ] **Graceful shutdown:** on `SIGTERM`, close open live streams, stop replay loops, then `pool.end()`.
+- [x] **Health check:** add a `/api/health` endpoint that also pings the database.
+  - Done: `/api/health` (it deliberately skips the database so pings don't keep a scale-to-zero database awake).
+- [x] **Graceful shutdown:** on `SIGTERM`, close open live streams, stop replay loops, then `pool.end()`.
+  - Done: `SIGTERM` stops the server and closes the pool.
 - [ ] **Structured logging** (for example `pino`) instead of `console.log`.
 
 ## 🟡 9. Performance

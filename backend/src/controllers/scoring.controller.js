@@ -1,5 +1,6 @@
 // Scorer console endpoints. Every change goes through the scoring engine and
 // the response is the fresh match state, so the console never has to guess.
+import crypto from "crypto";
 import db from "../db/index.js";
 import * as engine from "../scoring/engine.js";
 import { buildLivePayload } from "../scoring/events.js";
@@ -13,10 +14,21 @@ const respond = async (res, matchId, extra = {}) => {
   res.json({ ...extra, state });
 };
 
-// Optional shared secret: set SCORER_KEY in .env to protect write access.
+// Shared secret for write access: SCORER_KEY in .env. Optional locally; in
+// production the console stays locked until it is set.
+const sameKey = (given, expected) => {
+  const a = Buffer.from(String(given || ""));
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
 export const requireScorer = (req, res, next) => {
   const key = process.env.SCORER_KEY;
-  if (!key || req.get("x-scorer-key") === key) return next();
+  if (!key) {
+    if (process.env.NODE_ENV === "production") return res.status(503).json({ error: "Scoring is disabled until SCORER_KEY is set" });
+    return next();
+  }
+  if (sameKey(req.get("x-scorer-key"), key)) return next();
   res.status(401).json({ error: "Scorer key required" });
 };
 

@@ -1,0 +1,23 @@
+# Render Blueprint for the ScorePulse API (free web service).
+# Render dashboard -> New -> Blueprint -> pick this repo. Secrets marked
+# `sync: false` are asked for on first deploy and never stored in git.
+services:
+  - type: web
+    name: scorepulse-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL # Neon connection string (?sslmode=require)
+        sync: false
+      - key: SCORER_KEY # long random string; locks the scorer console
+        sync: false
+      - key: CORS_ORIGIN # e.g. https://scorepulse.vercel.app
+        sync: false

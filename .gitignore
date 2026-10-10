@@ -32,3 +32,6 @@ backend/.cache
 
 # keep migrations tracked despite the bare "migrations" rule above
 !backend/db/migrations/
+
+# personal notes, not part of the project
+resume.md
