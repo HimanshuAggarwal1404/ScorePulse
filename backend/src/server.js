@@ -1,12 +1,14 @@
 import app from "./app.js";
 import db from "./db/index.js";
 import { resumeRunningReplays } from "./scoring/replay.js";
+import { startKeepAlive } from "./lib/keepAlive.js";
 
 const PORT = process.env.PORT || 8000;
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   resumeRunningReplays().catch((err) => console.error("Could not resume replays:", err.message));
+  startKeepAlive();
 });
 
 // Hosts send SIGTERM on redeploy / scale-down: stop taking requests, then close the pool.

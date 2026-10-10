@@ -11,7 +11,9 @@ types.setTypeParser(1082, (v) => v);
 // Hosted Postgres (Neon, Render, Supabase ...) gives one DATABASE_URL and
 // requires TLS; local development uses the separate DB_* variables.
 // DB_SSL=false turns TLS off, e.g. for a local DATABASE_URL.
-const url = process.env.DATABASE_URL;
+// pg already treats sslmode=require as verify-full (checks the certificate); saying so
+// explicitly keeps that behaviour and silences its deprecation warning.
+const url = process.env.DATABASE_URL?.replace(/sslmode=(prefer|require|verify-ca)\b/, "sslmode=verify-full");
 const ssl = process.env.DB_SSL === "false" ? false : url ? { rejectUnauthorized: true } : false;
 
 const pool = new Pool({

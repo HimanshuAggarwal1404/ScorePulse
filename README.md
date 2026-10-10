@@ -252,7 +252,7 @@ A second pass uses surname and country from imported scorecards.
 - 100 KB body cap and timing-safe scorer-key comparison;
 - scoring that **fails closed** in production without a key;
 - TLS to Postgres and graceful `SIGTERM` shutdown;
-- a health route that deliberately doesn't wake a scale-to-zero database.
+- a health route that deliberately doesn't wake a scale-to-zero database, plus a built-in keep-alive so the free instance never cold-starts.
 
 `npm audit` found a critical `proxy-addr` IP-spoofing advisory, which matters precisely once `trust proxy` is on. It's patched: production dependencies report 0 vulnerabilities.
 
@@ -380,7 +380,7 @@ Pick the same region as the database.
 
 **3. Frontend → Vercel.** Set `VITE_API_URL=https://<service>.onrender.com` under *Settings → Environment Variables*, then **redeploy**: Vite bakes it in at build time.
 
-**4. Keep it awake.** Render's free tier sleeps after ~15 idle minutes, and the first visitor then waits 30–60 s. A free pinger (cron-job.org, UptimeRobot) hitting `/api/health` every 10 minutes prevents this. One service fits in the free 750 hours a month. The health route doesn't touch the database, so Neon still scales to zero.
+**4. Keep it awake (built in).** Render's free tier sleeps after ~15 idle minutes, and the next visitor would wait 30–60 s. The server avoids this itself: on Render it pings its own public URL (`RENDER_EXTERNAL_URL/api/health`) every 10 minutes, which counts as inbound traffic (`backend/src/lib/keepAlive.js`). One always-on service fits in the free 750 instance-hours a month. The health route doesn't touch the database, so Neon still scales to zero. Turn it off with `KEEP_ALIVE=false`.
 
 **5. Check.** Open the site in a private window. The browser's network tab should show calls to the Render URL with no CORS errors. Start a replay so the home page shows a live match.
 
