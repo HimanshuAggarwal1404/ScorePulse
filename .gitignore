@@ -36,3 +36,14 @@ backend/.cache
 # personal notes, not part of the project
 resume.md
 .neon
+
+# dev tooling and working notes, kept locally only
+CLAUDE.md
+RECOMMENDATIONS.md
+.claude/
+skills-lock.json
+neon.ts
+/package.json
+/package-lock.json
+.vite/
+Data to SQl/

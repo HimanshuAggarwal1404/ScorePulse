@@ -411,7 +411,7 @@ Pick the same region as the database.
 
 ## Limitations and roadmap
 
-Tracked in detail in [`RECOMMENDATIONS.md`](RECOMMENDATIONS.md). The main open items:
+The main open items:
 - **Scorer accounts:** replace the single shared key with users and roles, and record who scored each ball.
 - **Base schema migration** for `teams`, `venues` and `tournaments`, so a database builds from nothing.
 - **Real tournaments and points tables** from match results (net run rate from `innings_totals`); these pages still use sample data.
